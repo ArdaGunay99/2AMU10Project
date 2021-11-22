@@ -6,6 +6,7 @@ import random
 import time
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 import competitive_sudoku.sudokuai
+from typing import List
 
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
@@ -29,3 +30,18 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         while True:
             time.sleep(0.2)
             self.propose_move(random.choice(all_moves))
+
+    def find_legal_moves(self, state: GameState) -> List[move]:
+        """find legal moves (to be improved)"""
+        return []
+
+    def score_move(self, game_state: GameState, move: move) -> int:
+        """scores a move"""
+        return 0
+
+#to write:
+#function: find_legal_moves
+#function: score_state, providing state
+#idea: make moves that do not give winning move to your opponent
+#after your move, even nr cells to a scoring move as much as possible, lower even is better, higher odd is less bad
+
