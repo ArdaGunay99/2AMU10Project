@@ -60,14 +60,15 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             for i in range(N):
                 row = get_row(i)
                 for j in range(N):
-                    column = get_column(j)
-                    block = get_block(i, j)
-                    for value in range(1, N+1):
-                        if possible(i, j, value):
-                            if value in block or value in column or value in row:
-                                continue
-                            else:
-                                legal_moves.append(Move(i, j, value))
+                    if board.get(i, j) == board.empty:
+                        column = get_column(j)
+                        block = get_block(i, j)
+                        for value in range(1, N+1):
+                            if possible(i, j, value):
+                                if value in block or value in column or value in row:
+                                    continue
+                                else:
+                                    legal_moves.append(Move(i, j, value))
 
             return legal_moves
 
