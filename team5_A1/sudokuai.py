@@ -21,21 +21,71 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
 
     def compute_best_move(self, game_state: GameState) -> None:
-        root = MinimaxTree(game_state, game_state.moves[-1], 0) #note: move and score *should* not be used. Not sure though
+        game_copy = game_state.deepcopy()
+        root = MinimaxTree(game_copy, game_copy.moves[-1], 0) #note: move and score *should* not be used. Not sure though
         while True:
             root.add_layer()
             self.propose_move(root.get_best_move())
 
+def possible(i, j, value, game_state):
+    return not TabooMove(i, j, value) in game_state.taboo_moves
+
+# gets the values of non-empty cells in a row
+def get_row(i, board):
+    N = board.N
+    row = []
+    for j in range(N):
+        if board.get(i, j) != SudokuBoard.empty:
+            row.append(board.get(i, j))
+    return row
+
+# gets the values of non-empty cells in a column
+def get_column(j, board):
+    N = board.N
+    column = []
+    for i in range(N):
+        if board.get(i, j) != SudokuBoard.empty:
+            column.append(board.get(i, j))
+    return column
+
+# gets the values of non-empty cells in a block
+def get_block(i, j, board):
+    N = board.N
+    block = []
+    start_row = math.floor(i / board.m) * board.m
+    start_col = math.floor(j / board.n) * board.n
+
+    for row in range(start_row, start_row + board.m):
+        for col in range(start_col, start_col + board.n):
+            if board.get(row, col) != board.empty:
+                block.append(board.get(row, col))
+    return block
+
+# finds all possible legal moves in a given game state
+def find_legal_moves(game_state):
+    board = game_state.board
+    N = board.N
+    legal_moves = []
+    for i in range(N):
+        row = get_row(i, board)
+        for j in range(N):
+            if board.get(i, j) == board.empty:
+                column = get_column(j, board)
+                block = get_block(i, j, board)
+                for value in range(1, N + 1):
+                    if possible(i, j, value, game_state):
+                        if value in block or value in column or value in row:
+                            continue
+                        else:
+                            legal_moves.append(Move(i, j, value))
+
+    return legal_moves
 
 
 
-    def find_legal_moves(self, state: GameState) -> List[move]:
-        """find legal moves (to be improved)"""
-        return []
-
-    def score_move(self, game_state: GameState, move: move) -> int:
-        """scores a move (to be improved)"""
-        return 0
+def score_move(self, game_state: GameState, move: move) -> int:
+    """scores a move (to be improved)"""
+    return 0
 
 
 
@@ -57,10 +107,10 @@ class MinimaxTree():
         """
 
         if self.children == []:
-            #recursion base: do nothing
+            # recursion base: do nothing
             return
         else:
-            #loop through children scores, update and get
+            # loop through children scores, update and get
             scores = []
             for child in self.children:
                 child.update_score(not maximize)
