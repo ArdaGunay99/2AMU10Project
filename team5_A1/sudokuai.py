@@ -32,7 +32,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             
 #=====================================================================================
             
-def score_move(board_state: SudokuBoard, move: Move) -> float:
+def score_move(board_state: SudokuBoard, move: Move, opponent: bool=False) -> float:
     '''
     Parameters
     ----------
@@ -40,21 +40,23 @@ def score_move(board_state: SudokuBoard, move: Move) -> float:
         State of the current board BEFORE move is executed.
     move : Move
         Move to be executed, assumed to be legal.
+    opponent : bool
+        Boolean indicating whether the move is being executed by us or by our
+        opponent. When True, scores are multiplied by -1 before being returned,
+        as any move that is good for our opponent is bad for us and vice versa.
 
     Returns
     -------
     float
-        A measure of how likely the move is to lead to a new point.
-        Should be in the range of [-1,1], with 1 definitely leading to a new point 
-        and -1 very likely leading to the opponent scoring a new point.
+        A measure of how likely the move is to lead to a new point for us and no
+        new point for our opponent.
     '''
-    #apply move to the board, get new board
-    #new_board = game_state.board.copy()
+    #create a copy of the board and apply the move to it
     new_board = SudokuBoard(board_state.m, board_state.n)
     new_board.squares = board_state.squares.copy()
     new_board.put(move.i,move.j,move.value)
     
-    #count empty cells present in column, row, and block of the new move
+    #count the empty cells present in the column, row, and block of the new move
     #column, just loop over all values with the correct column index and count empty values
     col_empty = 0
     move_col = move.j
@@ -71,10 +73,10 @@ def score_move(board_state: SudokuBoard, move: Move) -> float:
         if new_board.get(move_row,j) == new_board.empty:
             row_empty += 1
     
-    #block, figure out where the edges of the block reside by calculating the remainder of 
-    #the fractions with block-width and -length
+    #block...
     block_empty = 0
     
+    #first find out where the borders of the block reside
     remainder_width = move_row % new_board.m
     left_border = move_row - remainder_width     #first index of current block
     right_border = left_border + new_board.m     #first index of next block
@@ -83,29 +85,34 @@ def score_move(board_state: SudokuBoard, move: Move) -> float:
     top_border = move_col - remainder_length     #first index of current block
     bottom_border = top_border + new_board.n     #first index of next block
     
+    #then use the borders to loop over each tile in the block and count the emptys.
     for i in range(left_border, right_border):
         for j in range(top_border, bottom_border):
             if new_board.get(i,j) == new_board.empty:
                 block_empty += 1
     
-    #compute column, row and block scores according to the heuristic
+    #compute column, row and block scores by applying the weighting function (see report)
     if col_empty%2 == 0: #if there's an even number of empty cells
-        col_score = 1 / (col_empty + 1)
+        col_score = 3 / (col_empty + 1)
     else: #if there's an uneven number of empty cells
-        col_score = - (1 / col_empty)
+        col_score = - (3 / col_empty)
         
     if row_empty%2 == 0:
-        row_score = 1 / (row_empty + 1)
+        row_score = 3 / (row_empty + 1)
     else:
-        row_score = - (1 / row_empty)
+        row_score = - (3 / row_empty)
         
     if block_empty%2 == 0:
         block_score = 3 / (block_empty + 1)
     else:
-        block_score = - (1 / block_empty)
+        block_score = - (3 / block_empty)
         
     
     final_score = (col_score + row_score + block_score) / 3
+    
+    #return the negative of the final score if the opponent is the one executing it.
+    if opponent:
+        return -final_score
                 
     return final_score
     

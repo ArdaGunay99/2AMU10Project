@@ -38,13 +38,17 @@ test_board.put(3,3,6)
 test_board.put(1,4,6)
 test_board.put(0,6,1)
 test_board.put(0,8,4)
+test_board.put(6,8,6)
+test_board.put(1,8,5)
+test_board.put(2,0,6)
+test_board.put(1,6,3)
 
 print(print_board(test_board))
 
-possible_moves = [(2,0,6),(6,8,6),(1,8,5),(3,0,1),(1,8,5)]
+possible_moves = [(3,0,1),(1,8,5),(7,1,6),(0,2,4),(1,7,8)]
 
 for m in possible_moves:
-    print(score_move(test_board,Move(*m)))
+    print(score_move(test_board,Move(*m),True))
     
 
 
