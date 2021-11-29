@@ -171,17 +171,20 @@ def score_move(game_state: GameState, move: Move, opponent: bool=False) -> float
   
 
 class MinimaxTree():
-    def __init__(self, game_state: GameState, move: Move, score: float):
+    def __init__(self, game_state: GameState, move: Move, score: float, maximize=False):
         self.game_state = game_state
         self.move = move
         self.score = score
         self.children = [] #contains a list of trees showing moves that can be played from here
 
-    def update_score(self, maximize: bool):
+        self.maximize = maximize
+
+    def update_score(self):
         """
         Recursively updates child scores then takes them and either maximizes or minimizes score, flipping each turn.
 
-        :param maximize: whether to maximize (true) or minimize (false) the score on this node
+        Uses maximize: whether to maximize (true) or minimize (false) the score on this node
+               should be false for opponent move
         :return: None
         """
 
@@ -192,9 +195,9 @@ class MinimaxTree():
             # loop through children scores, update and get
             scores = []
             for child in self.children:
-                child.update_score(not maximize) #note: this still needs editing, probably?
+                child.update_score()
                 scores.append(child.score)
-            if maximize == False:
+            if self.maximize == False:
                 self.score = min(scores)
             else:
                 self.score = max(scores)
@@ -209,7 +212,7 @@ class MinimaxTree():
 
         for move in legal_moves:
             #score move
-            score = score_move(self.game_state, move)
+            score = score_move(self.game_state, move, not self.maximize)
 
             new_board = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
             new_board.squares = self.game_state.board.squares.copy()
@@ -219,7 +222,7 @@ class MinimaxTree():
                                   self.game_state.scores.copy())
 
             #add it to the children
-            self.children.append(MinimaxTree(new_state, move, score))
+            self.children.append(MinimaxTree(new_state, move, score, not self.maximize))
 
     def add_layer(self):
         """
