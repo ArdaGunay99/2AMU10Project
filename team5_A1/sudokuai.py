@@ -85,7 +85,7 @@ def find_legal_moves(game_state):
     return legal_moves
 
 
-def score_move(board_state: SudokuBoard, move: Move, opponent: bool=False) -> float:
+def score_move(game_state: GameState, move: Move, opponent: bool=False) -> float:
     '''
     Parameters
     ----------
@@ -103,6 +103,7 @@ def score_move(board_state: SudokuBoard, move: Move, opponent: bool=False) -> fl
         A measure of how likely the move is to lead to a new point for us and no
         new point for our opponent.
     '''
+    board_state = game_state.board
     #create a copy of the board and apply the move to it
     new_board = SudokuBoard(board_state.m, board_state.n)
     new_board.squares = board_state.squares.copy()
@@ -208,7 +209,7 @@ class MinimaxTree():
 
         for move in legal_moves:
             #score move
-            score = score_move(self.game_state.board, move)
+            score = score_move(self.game_state, move)
 
             new_board = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
             new_board.squares = self.game_state.board.squares.copy()
