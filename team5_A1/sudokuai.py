@@ -26,7 +26,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         game_copy = GameState(game_state.initial_board, board_copy,
                               game_state.taboo_moves.copy(), game_state.moves.copy(),
                               game_state.scores.copy())
-        root = MinimaxTree(game_copy, game_copy.moves[-1], 0) #note: move and score *should* not be used. Not sure though
+        root = MinimaxTree(game_copy, (0,0,0), 0) #note: move and score *should* not be used. Not sure though
         while True:
             root.add_layer()
             self.propose_move(root.get_best_move())
@@ -195,9 +195,9 @@ class MinimaxTree():
                 child.update_score(not maximize)
                 scores.append(child.score)
             if maximize == False:
-                self.score = min(score)
+                self.score = min(scores)
             else:
-                self.score = max(score)
+                self.score = max(scores)
 
     def add_layer_here(self):
         """
@@ -205,18 +205,18 @@ class MinimaxTree():
         :return:
         """
         # find legal moves
-        legal_moves = self.find_legal_moves(game_state)
+        legal_moves = find_legal_moves(self.game_state)
 
         for move in legal_moves:
             #score move
-            score = self.score_move(game_state.board, move)
+            score = score_move(self.game_state.board, move)
 
-            new_board = SudokuBoard(game_state.board.m, game_state.board.n)
-            new_board.squares = game_state.board.squares.copy()
+            new_board = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
+            new_board.squares = self.game_state.board.squares.copy()
             new_board.put(move.i, move.j, move.value)
-            new_state = GameState(game_state.initial_board, new_board,
-                                  game_state.taboo_moves.copy(), game_state.moves.copy(),
-                                  game_state.scores.copy())
+            new_state = GameState(self.game_state.initial_board, new_board,
+                                  self.game_state.taboo_moves.copy(), self.game_state.moves.copy(),
+                                  self.game_state.scores.copy())
 
             #add it to the children
             self.children.append(MinimaxTree(new_state, move, score))
@@ -243,7 +243,7 @@ class MinimaxTree():
 
         best_score = -99999999
         best_move = None
-        for child in children:
+        for child in self.children:
             if child.score > best_score:
                 best_score = child.score
                 best_move = child.move
