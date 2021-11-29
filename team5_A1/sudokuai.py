@@ -25,7 +25,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         game_copy = GameState(game_state.initial_board, board_copy,
                               game_state.taboo_moves.copy(), game_state.moves.copy(),
                               game_state.scores.copy())
-        root = MinimaxTree(game_copy, (0, 0, 0), 0)  # note: move and score *should* not be used. Not sure though
+        root = MinimaxTree(game_copy, Move(0, 0, 0), 0)  # note: move and score *should* not be used. Not sure though
         i = 0
         while True:
             root.add_layer()
@@ -33,39 +33,45 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             i += 1
             print(i)
 
+
+# checks if a move is in the list of taboo moves
 def possible(i, j, value, game_state):
     return not TabooMove(i, j, value) in game_state.taboo_moves
+
 
 # gets the values of non-empty cells in a row
 def get_row(i, board):
     N = board.N
-    row = []
+    row = set([])
     for j in range(N):
         if board.get(i, j) != SudokuBoard.empty:
-            row.append(board.get(i, j))
+            row.add(board.get(i, j))
     return row
+
 
 # gets the values of non-empty cells in a column
 def get_column(j, board):
     N = board.N
-    column = []
+    column = set([])
     for i in range(N):
         if board.get(i, j) != SudokuBoard.empty:
-            column.append(board.get(i, j))
+            column.add(board.get(i, j))
     return column
+
 
 # gets the values of non-empty cells in a block
 def get_block(i, j, board):
     N = board.N
-    block = []
+    block = set([])
     start_row = math.floor(i / board.m) * board.m
     start_col = math.floor(j / board.n) * board.n
 
     for row in range(start_row, start_row + board.m):
         for col in range(start_col, start_col + board.n):
             if board.get(row, col) != board.empty:
-                block.append(board.get(row, col))
+                block.add(board.get(row, col))
     return block
+
 
 # finds all possible legal moves in a given game state
 def find_legal_moves(game_state):
@@ -110,7 +116,7 @@ def score_move(game_state: GameState, move: Move, opponent: bool=False) -> float
     #create a copy of the board and apply the move to it
     new_board = SudokuBoard(board_state.m, board_state.n)
     new_board.squares = board_state.squares.copy()
-    new_board.put(move.i,move.j,move.value)
+    new_board.put(move.i, move.j, move.value)
     
     #count the empty cells present in the column, row, and block of the new move
     #column, just loop over all values with the correct column index and count empty values
