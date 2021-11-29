@@ -25,7 +25,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         game_copy = GameState(game_state.initial_board, board_copy,
                               game_state.taboo_moves.copy(), game_state.moves.copy(),
                               game_state.scores.copy())
-        root = MinimaxTree(game_copy, Move(0, 0, 0), 0)  # note: move and score *should* not be used. Not sure though
+        if len(game_copy.moves) < 1:
+            player_nr = 1
+        else:
+            player_nr = 2
+        root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr)  # note: move and score *should* not be used. Not sure though
         i = 0
         while True:
             root.add_layer()
@@ -94,7 +98,7 @@ def find_legal_moves(game_state):
     return legal_moves
 
 
-def score_move(game_state: GameState, move: Move, opponent: bool=False) -> float:
+def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool=False) -> float:
     '''
     Parameters
     ----------
@@ -102,6 +106,8 @@ def score_move(game_state: GameState, move: Move, opponent: bool=False) -> float
         State of the current board BEFORE move is executed.
     move : Move
         Move to be executed, assumed to be legal.
+    player_nr : int
+        Our player number (1 or 2), not necessarily the player number of the one executing the move!
     opponent : bool
         Boolean indicating whether the move is being executed by us or by our
         opponent. When True, scores are multiplied by -1 before being returned.
@@ -109,9 +115,18 @@ def score_move(game_state: GameState, move: Move, opponent: bool=False) -> float
     Returns
     -------
     float
-        A measure of how likely the move is to lead to a new point for us and no
-        new point for our opponent.
+        A measure of how likely the move is to lead to a victory for us and a defeat for our opponent,
+        given the current state of the game.
     '''
+    #first calculate the current difference in scores (our score - opponent's score)
+    if player_nr == 1:
+        current_score_difference = game_state.scores[0] - game_state.scores[1]
+    elif player_nr == 2:
+        current_score_difference = game_state.scores[1] - game_state.scores[0]
+    else:
+        raise ValueError("player_nr is {}, can only be either 1 or 2".format(player_nr))
+     
+    
     board_state = game_state.board
     #create a copy of the board and apply the move to it
     new_board = SudokuBoard(board_state.m, board_state.n)
@@ -153,37 +168,58 @@ def score_move(game_state: GameState, move: Move, opponent: bool=False) -> float
             if new_board.get(i,j) == new_board.empty:
                 block_empty += 1
     
+    regions = 0 #variable to keep track of any points that may be scored by performing the move
+    
     #compute column, row and block scores by applying the weighting function (see report)
     if col_empty%2 == 0: #if there's an even number of empty cells
-        col_score = 3 / (col_empty + 1)
+        col_score = 1 / (col_empty + 1)
+        if col_empty == 0:
+            regions += 1
     else: #if there's an uneven number of empty cells
-        col_score = - (3 / col_empty)
+        col_score = - (1 / col_empty)
         
     if row_empty%2 == 0:
-        row_score = 3 / (row_empty + 1)
+        row_score = 1 / (row_empty + 1)
+        if row_empty == 0:
+            regions += 1
     else:
-        row_score = - (3 / row_empty)
+        row_score = - (1 / row_empty)
         
     if block_empty%2 == 0:
-        block_score = 3 / (block_empty + 1)
+        block_score = 1 / (block_empty + 1)
+        if block_empty == 0:
+            regions += 1
     else:
-        block_score = - (3 / block_empty)
+        block_score = - (1 / block_empty)
         
+    if regions == 0 or regions == 1:
+        points = regions
+    elif regions == 2:
+        points = 3
+    elif regions == 3:
+        points = 7
     
-    final_score = (col_score + row_score + block_score) / 3
+    final_score = ((col_score + row_score + block_score) / 3) + 2*points
     
-    #return the negative of the final score if the opponent is the one executing it.
+    if (player_nr == 1 and opponent) or (player_nr == 2 and not opponent):
+        new_points = [game_state.scores[0], game_state.scores[1] + points]
+    elif (player_nr == 1 and not opponent) or (player_nr == 2 and opponent):
+        new_points = [game_state.scores[0] + points, game_state.scores[1]]
+    
+    #return the negative of the final score if the opponent is the one executing it
+    #add the current score to put the efficiency of the current move into the context of the full game
     if opponent:
-        return -final_score
+        return -final_score + current_score_difference, new_points
                 
-    return final_score
+    return final_score + current_score_difference, new_points
   
 
 class MinimaxTree():
-    def __init__(self, game_state: GameState, move: Move, score: float, maximize=False):
+    def __init__(self, game_state: GameState, move: Move, score: float, player_nr: int, maximize=True):
         self.game_state = game_state
         self.move = move
         self.score = score
+        self.player_nr = player_nr
         self.children = [] #contains a list of trees showing moves that can be played from here
 
         self.maximize = maximize
@@ -221,17 +257,17 @@ class MinimaxTree():
 
         for move in legal_moves:
             #score move
-            score = score_move(self.game_state, move, not self.maximize)
+            score, new_points = score_move(self.game_state, move, self.player_nr, not self.maximize)
 
             new_board = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
             new_board.squares = self.game_state.board.squares.copy()
             new_board.put(move.i, move.j, move.value)
             new_state = GameState(self.game_state.initial_board, new_board,
                                   self.game_state.taboo_moves.copy(), self.game_state.moves.copy(),
-                                  self.game_state.scores.copy())
+                                  new_points)
 
             #add it to the children
-            self.children.append(MinimaxTree(new_state, move, score, not self.maximize))
+            self.children.append(MinimaxTree(new_state, move, score, self.player_nr, not self.maximize))
 
     def add_layer(self):
         """
