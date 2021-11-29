@@ -21,7 +21,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
 
     def compute_best_move(self, game_state: GameState) -> None:
-        game_copy = game_state.deepcopy()
+        board_copy = SudokuBoard(game_state.board.m, game_state.board.n)
+        board_copy.squares = game_state.board.squares.copy()
+        game_copy = GameState(game_state.initial_board, board_copy,
+                              game_state.taboo_moves.copy(), game_state.moves.copy(),
+                              game_state.scores.copy())
         root = MinimaxTree(game_copy, game_copy.moves[-1], 0) #note: move and score *should* not be used. Not sure though
         while True:
             root.add_layer()
@@ -92,8 +96,7 @@ def score_move(board_state: SudokuBoard, move: Move, opponent: bool=False) -> fl
         Move to be executed, assumed to be legal.
     opponent : bool
         Boolean indicating whether the move is being executed by us or by our
-        opponent. When True, scores are multiplied by -1 before being returned,
-        as any move that is good for our opponent is bad for us and vice versa.
+        opponent. When True, scores are multiplied by -1 before being returned.
 
     Returns
     -------
@@ -208,8 +211,12 @@ class MinimaxTree():
             #score move
             score = self.score_move(game_state.board, move)
 
-            new_state = game_state.copy()
-            new_state.put(*move)
+            new_board = SudokuBoard(game_state.board.m, game_state.board.n)
+            new_board.squares = game_state.board.squares.copy()
+            new_board.put(move.i, move.j, move.value)
+            new_state = GameState(game_state.initial_board, new_board,
+                                  game_state.taboo_moves.copy(), game_state.moves.copy(),
+                                  game_state.scores.copy())
 
             #add it to the children
             self.children.append(MinimaxTree(new_state, move, score))
