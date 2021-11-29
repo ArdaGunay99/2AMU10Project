@@ -19,14 +19,13 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     def __init__(self):
         super().__init__()
 
-
     def compute_best_move(self, game_state: GameState) -> None:
         board_copy = SudokuBoard(game_state.board.m, game_state.board.n)
         board_copy.squares = game_state.board.squares.copy()
         game_copy = GameState(game_state.initial_board, board_copy,
                               game_state.taboo_moves.copy(), game_state.moves.copy(),
                               game_state.scores.copy())
-        root = MinimaxTree(game_copy, (0,0,0), 0) #note: move and score *should* not be used. Not sure though
+        root = MinimaxTree(game_copy, (0, 0, 0), 0)  # note: move and score *should* not be used. Not sure though
         while True:
             root.add_layer()
             self.propose_move(root.get_best_move())
@@ -186,13 +185,13 @@ class MinimaxTree():
         """
 
         if self.children == []:
-            # recursion base: do nothing
+            # recursion base: do nothing (using the score that was decided when the node was made)
             return
         else:
             # loop through children scores, update and get
             scores = []
             for child in self.children:
-                child.update_score(not maximize)
+                child.update_score(not maximize) #note: this still needs editing, probably?
                 scores.append(child.score)
             if maximize == False:
                 self.score = min(scores)
