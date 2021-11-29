@@ -26,9 +26,12 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                               game_state.taboo_moves.copy(), game_state.moves.copy(),
                               game_state.scores.copy())
         root = MinimaxTree(game_copy, (0, 0, 0), 0)  # note: move and score *should* not be used. Not sure though
+        i = 0
         while True:
             root.add_layer()
             self.propose_move(root.get_best_move())
+            i += 1
+            print(i)
 
 def possible(i, j, value, game_state):
     return not TabooMove(i, j, value) in game_state.taboo_moves
@@ -242,7 +245,7 @@ class MinimaxTree():
         then suggesting the move made by the child with the best score.
         :return: Move
         """
-        self.update_score(True)
+        self.update_score()
 
         best_score = -99999999
         best_move = None
