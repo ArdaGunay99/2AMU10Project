@@ -33,5 +33,6 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         # Use the Minimaxtree to get the best move, as described in the report
         root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr)
         while True:
+            # repeatedly look further into the future and get the best move found
             root.add_layer()
             self.propose_move(root.get_best_move())

@@ -5,19 +5,18 @@ class MinimaxTree():
     def __init__(self, game_state: GameState, move: Move, score: float, player_nr: int, maximize=True):
         self.game_state = game_state
         self.move = move
-        self.score = score
-        self.player_nr = player_nr    #Remains the same for all tree nodes
-        self.children = []            #contains a list of MinimaxTrees showing moves that can be played from here
+        self.score = score            # The score for the gamestate on this node
+        self.player_nr = player_nr    # Remains the same for all tree nodes
+        self.children = []            # contains a list of MinimaxTrees showing moves that can be played from here
 
         self.maximize = maximize
 
     def update_score(self):
         """
-        Recursively updates child scores then takes them and either maximizes or minimizes score, flipping each turn.
+        Recursively updates child scores then takes them and either maximizes or minimizes score, flipping each layer of the tree.
 
         Uses self.maximize: whether to maximize (true) or minimize (false) the score on this node
                should be false for opponent move
-        :return: None
         """
 
         if self.children == []:
@@ -39,7 +38,6 @@ class MinimaxTree():
     def add_layer_here(self):
         """
         Adds a layer to the tree with moves that can be played now and their scores.
-        :return:
         """
         # find legal moves
         legal_moves = find_legal_moves(self.game_state)
@@ -65,7 +63,6 @@ class MinimaxTree():
     def add_layer(self):
         """
         Goes to the bottom of the tree and adds a layer there
-        :return: None
         """
         # recursively check if each node has children
         if len(self.children) > 0:
@@ -81,7 +78,7 @@ class MinimaxTree():
         then suggesting the move made by the child with the best score.
         :return: Move
         """
-        self.update_score() # update the scores so children's scores are correct
+        self.update_score()  # update the scores so children's scores are correct
 
         best_score = -99999999
         best_move = None

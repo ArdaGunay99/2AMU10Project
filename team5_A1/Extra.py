@@ -1,6 +1,7 @@
 import math
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 
+
 def possible(i: int, j: int, value: int, game_state: GameState) -> bool:
     '''
     checks if a move is in the list of taboo moves.
@@ -112,8 +113,8 @@ def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool
     :param game_state: type GameState. The gamestate Before the move is executed.
     :param move: type Move. The move that is being scored, assumed to be legal.
     :param player_nr: type int. 1 if our agent is player 1, 2 if our agent is player 2.
-    :param opponent: type bool. if True, the move is assumed to be executed by our agent. If False, the move is assumed to
-    be executed by our agent's opponent.
+    :param opponent: type bool. if True, the move is assumed to be executed by our opponent. If False, the move is assumed to
+    be executed by our agent.
     
     :return: type float. The score given to the move when performed in the current GameState.
     :return: type list. The new score balance ([score-player1, score-player2]) if the move were to be executed in the current GameState
