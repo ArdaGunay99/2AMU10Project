@@ -20,22 +20,25 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         super().__init__()
 
     def compute_best_move(self, game_state: GameState) -> None:
+        # creating a copy of the game_state instance
         board_copy = SudokuBoard(game_state.board.m, game_state.board.n)
         board_copy.squares = game_state.board.squares.copy()
         game_copy = GameState(game_state.initial_board, board_copy,
                               game_state.taboo_moves.copy(), game_state.moves.copy(),
                               game_state.scores.copy())
-        if len(game_copy.moves) < 1:
+        # checking whether if we are the first or the second player
+        if len(game_copy.moves) % 2 == 0:
             player_nr = 1
         else:
             player_nr = 2
-        root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr)  # note: move and score *should* not be used. Not sure though
-        i = 0
+
+        root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr)
+        # i = 0
         while True:
             root.add_layer()
             self.propose_move(root.get_best_move())
-            i += 1
-            print(i)
+            # i += 1
+            # print(i)
 
 
 # checks if a move is in the list of taboo moves
@@ -67,7 +70,9 @@ def get_column(j, board):
 def get_block(i, j, board):
     N = board.N
     block = set([])
+    # row index of the top left cell of the block
     start_row = math.floor(i / board.m) * board.m
+    # column index of the top left cell of the block
     start_col = math.floor(j / board.n) * board.n
 
     for row in range(start_row, start_row + board.m):
