@@ -1,5 +1,6 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
 from .Extra import find_legal_moves, score_move
+import time
 
 class MinimaxTree():
     def __init__(self, game_state: GameState, move: Move, score: float, player_nr: int, maximize=True):
@@ -10,6 +11,7 @@ class MinimaxTree():
         self.children = []            # contains a list of MinimaxTrees showing moves that can be played from here
 
         self.maximize = maximize
+        self.active = True            # False if the tree is pruned. No new levels will be added to this
 
     def update_score(self):
         """
@@ -39,10 +41,15 @@ class MinimaxTree():
         """
         Adds a layer to the tree with moves that can be played now and their scores.
         """
+        #start = time.time()
         # find legal moves
         legal_moves = find_legal_moves(self.game_state)
+        #print(f"{time.time()-start} legal got, length {len(legal_moves)}")
+        if len(legal_moves) == 0:
+            self.active = False
+            #turns off adding a layer to anything that has no legal moves left (finished games, mostly)
         
-        # Iterate ove the legal moves and add a child in the new layer for each
+        # Iterate over the legal moves and add a child in the new layer for each
         for move in legal_moves:
             # score the move and find out what the new point balance would be after the move is made
             # the score is input for the new MinimaxTree, new_points is input for the new GameState.
@@ -62,15 +69,28 @@ class MinimaxTree():
 
     def add_layer(self):
         """
-        Goes to the bottom of the tree and adds a layer there
+        Goes to the bottom of the tree and adds a layer there.
+        Uses A-B Pruning to decrease work
         """
+        i = 0
+        j = 0
+        start = time.time()
+        #prevent doing unneeded work by ab pruning the tree before adding a layer
+        self.prune()
         # recursively check if each node has children
         if len(self.children) > 0:
             for child in self.children:
-                child.add_layer()
+                if child.active: #do not go down pruned branches
+                    child.add_layer()
+                else:
+                    i += 1
+                j += 1
+            print(time.time()-start, "     ", i, "    ", j) #(i out of j moves are pruned)
         # when a childless node is reached (the bottom of the tree), add children to it
         else:
             self.add_layer_here()
+
+
 
     def get_best_move(self) -> Move:
         """
@@ -88,3 +108,73 @@ class MinimaxTree():
                 best_score = child.score
                 best_move = child.move
         return(best_move)
+
+    def minimax(self, a = -9999, b = +9999):
+        """Simply copying some minimax pseudocode before figuring out how to use it"""
+        if len(self.children) == 0:
+            return self.score
+        elif self.maximize:
+            maxEva = -9999
+            for child in self.children:
+                eva = minimax(child, a, b)
+                maxEva = max(maxEva, eva)
+                a = max(a, eva)
+                if a >= b:
+                    break
+            return maxEva
+        elif not self.maximize:
+            minEva = 9999
+            for child in self.children:
+                eva = minimax(child, a, b)
+                minEva = min(minEva, eva)
+                b = min(b, eva)
+                if a >= b:
+                    break
+            return minEva
+        else:
+            raise Exception("How did you get here????")
+
+    def prune(self, a = -9999, b = +9999):
+        """Prunes branches that will not impact final analysis"""
+        if len(self.children) == 0:
+            return self.score
+        elif self.maximize:
+            maxEva = -9999
+            for child in self.children:
+                if a < b:
+                    eva = child.prune(a, b)
+                    maxEva = max(maxEva, eva)
+                    a = max(a, eva)
+                else: #if needs to be pruned
+                    child.active = False
+            return maxEva
+        elif not self.maximize:
+            minEva = 9999
+            for child in self.children:
+                if a < b:
+                    eva = child.prune( a, b)
+                    minEva = min(minEva, eva)
+                    b = min(b, eva)
+                else: #if needs to be pruned
+                    child.active = False
+            return minEva
+        else:
+            raise Exception("How did you get here????")
+
+
+
+
+
+#pruning:
+#add 2 parameters to each node: a,b
+##Only recurse into node if node.a>=node.b
+##a: Maximum value found for maximizer (max(-inf, max(child.score for child in self.children))
+##b: Minimum (best) value found for minimizer (min(inf, min(child.score for child in self.children))
+#add active, false if pruned
+#only add layers to active
+
+
+
+
+
+#

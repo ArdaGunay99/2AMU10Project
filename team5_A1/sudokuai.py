@@ -5,6 +5,7 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
 import competitive_sudoku.sudokuai
 from .MinimaxTree import MinimaxTree
+#import time
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
     """
@@ -32,7 +33,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         
         # Use the Minimaxtree to get the best move, as described in the report
         root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr)
-        while True:
+        moves_ahead = 0
+        while moves_ahead < 10:
+            moves_ahead += 1
             # repeatedly look further into the future and get the best move found
+            #start = time.time()
             root.add_layer()
             self.propose_move(root.get_best_move())
+            print(f"layer {moves_ahead} added")
