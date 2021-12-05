@@ -67,11 +67,12 @@ class MinimaxTree():
             #add the new MinimaxTree to the children of the current one
             self.children.append(MinimaxTree(new_state, move, score, self.player_nr, not self.maximize))
 
-    def add_layer(self):
+    def add_layer(self, indent = ""):
         """
         Goes to the bottom of the tree and adds a layer there.
         Uses A-B Pruning to decrease work
         """
+        #prune reporting
         i = 0
         j = 0
         start = time.time()
@@ -81,11 +82,11 @@ class MinimaxTree():
         if len(self.children) > 0:
             for child in self.children:
                 if child.active: #do not go down pruned branches
-                    child.add_layer()
-                else:
+                    child.add_layer(indent + "  ")
+                else: # prune reporting
                     i += 1
                 j += 1
-            print(time.time()-start, "     ", i, "    ", j) #(i out of j moves are pruned)
+            print(f"{indent} {int((time.time()-start)*1000)} ms      {i} out of {j} Pruned") #(i out of j moves are pruned)
         # when a childless node is reached (the bottom of the tree), add children to it
         else:
             self.add_layer_here()
