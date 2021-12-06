@@ -34,10 +34,13 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         # Use the Minimaxtree to get the best move, as described in the report
         root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr)
         moves_ahead = 0
-        while moves_ahead < 10:
+        moves_tbd = moves_left(board_copy)
+        while moves_ahead < moves_tbd:
             moves_ahead += 1
             # repeatedly look further into the future and get the best move found
             #start = time.time()
             root.add_layer()
             self.propose_move(root.get_best_move())
             print(f"layer {moves_ahead} added")
+
+        #endgame mode: when <x moves left, try to make it so an odd number of moves left in duration of game, if even try to make taboo move

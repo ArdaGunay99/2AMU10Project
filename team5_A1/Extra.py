@@ -217,3 +217,16 @@ def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool
         return -final_score + current_score_difference, new_points
                 
     return final_score + current_score_difference, new_points
+
+def moves_left(board : SudokuBoard):
+    """
+    :param board: A Sudoku board
+    :return: The number of empty squares that are still left on the sudoku board
+    """
+
+    counter = 0
+    for i in range(board.N):
+        for j in range(board.N):
+            if board.get(i,j) == board.empty:
+                counter += 1
+    return counter
