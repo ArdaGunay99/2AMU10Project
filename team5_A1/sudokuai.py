@@ -5,6 +5,7 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
 import competitive_sudoku.sudokuai
 from .MinimaxTree import MinimaxTree
+from .Extra import moves_left
 #import time
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
@@ -39,8 +40,16 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             moves_ahead += 1
             # repeatedly look further into the future and get the best move found
             #start = time.time()
-            root.add_layer()
+            root.smart_add_layer({})
+            # root.add_layer()
+
             self.propose_move(root.get_best_move())
             print(f"layer {moves_ahead} added")
 
         #endgame mode: when <x moves left, try to make it so an odd number of moves left in duration of game, if even try to make taboo move
+        #last moment with options: when there is still a spot where there are two openings in row, column and block for some row, column and block
+        #minimum open: 3 squares (two in same block, same column/row, one other in the same row/column as one of those)
+        #maximum open: N + 1 per block not on the diagonal + 1
+        # minimum blocks on diagonalL sqrt(n*m)
+        # max blocks not on it: n*m-sqrt(n*m)
+        #total: N + n*m-sqrt(n*m) + 1

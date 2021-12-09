@@ -2,6 +2,7 @@ from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
 from .Extra import find_legal_moves, score_move
 import time
 
+
 class MinimaxTree():
     def __init__(self, game_state: GameState, move: Move, score: float, player_nr: int, maximize=True):
         self.game_state = game_state
@@ -13,7 +14,6 @@ class MinimaxTree():
         self.maximize = maximize
         self.active = True            # False if the tree is pruned. No new levels will be added to this
 
-
     def update_score(self):
         """
         Recursively updates child scores then takes them and either maximizes or minimizes score, flipping each layer of the tree.
@@ -22,7 +22,7 @@ class MinimaxTree():
                should be false for opponent move
         """
 
-        if self.children == []:
+        if not self.children:
             # recursion base: do nothing (using the score that was decided when the node was made)
             return
         else:
@@ -33,7 +33,7 @@ class MinimaxTree():
                 scores.append(child.score)
                 
             # update the current node's score by replacing it with the maximum or minimum of the children's scores
-            if self.maximize == False:
+            if not self.maximize:
                 self.score = min(scores)
             else:
                 self.score = max(scores)
@@ -42,13 +42,13 @@ class MinimaxTree():
         """
         Adds a layer to the tree with moves that can be played now and their scores.
         """
-        #start = time.time()
+        # start = time.time()
         # find legal moves
         legal_moves = find_legal_moves(self.game_state)
-        #print(f"{time.time()-start} legal got, length {len(legal_moves)}")
+        # print(f"{time.time()-start} legal got, length {len(legal_moves)}")
         if len(legal_moves) == 0:
             self.active = False
-            #turns off adding a layer to anything that has no legal moves left (finished games, mostly)
+            # turns off adding a layer to anything that has no legal moves left (finished games, mostly)
         
         # Iterate over the legal moves and add a child in the new layer for each
         for move in legal_moves:
@@ -65,7 +65,7 @@ class MinimaxTree():
                                   self.game_state.taboo_moves.copy(), self.game_state.moves.copy(),
                                   new_points)
 
-            #add the new MinimaxTree to the children of the current one
+            # add the new MinimaxTree to the children of the current one
             self.children.append(MinimaxTree(new_state, move, score, self.player_nr, not self.maximize))
 
     def add_layer(self, indent = ""):
@@ -73,16 +73,16 @@ class MinimaxTree():
         Goes to the bottom of the tree and adds a layer there.
         Uses A-B Pruning to decrease work
         """
-        #prune reporting
+        # prune reporting
         i = 0
         j = 0
         start = time.time()
-        #prevent doing unneeded work by ab pruning the tree before adding a layer
+        # prevent doing unneeded work by ab pruning the tree before adding a layer
         self.prune()
         # recursively check if each node has children
         if len(self.children) > 0:
             for child in self.children:
-                if child.active: #do not go down pruned branches
+                if child.active: # do not go down pruned branches
                     child.add_layer(indent + "  ")
                 else: # prune reporting
                     i += 1
@@ -150,22 +150,25 @@ class MinimaxTree():
         j = 0
         k = 0
         start = time.time()
-        # prevent doing unneeded work by ab pruning the tree before adding a layer
-        self.prune()
+        # prevent doing unneeded work by ab pruning the tree before adding a layer. Only do it once
+        if board_states == {}:
+            self.prune()
         # recursively check if each node has children
         if len(self.children) > 0:
             for child in self.children:
                 if child.active:  # do not go down pruned branches
                     try:
-                        board_score = board_states[(child.game_state.board.squares, child.maximizing)]
-                    except:
+                        board_score = board_states[(tuple(child.game_state.board.squares), child.maximize)]
+                    except KeyError:
                         board_score = -999999
-                    if board_score < child.score: #do not go down branches where the same board position has already been encountered
-                                                   #but with a better score for us
-                        board_states[(child.game_state.board.squares, child.maximizing)] = child.score
+
+                    if board_score < child.score:  #do not go down branches where the same board position has already been encountered
+                                                   # but with a better score for us
+                        board_states[(tuple(child.game_state.board.squares), child.maximize)] = child.score
                         board_states = child.smart_add_layer(board_states, indent + "  ")
                     else:
                         child.active = False
+                        print(f"{indent} deactivating branch {j}")
                         k += 1
                 else:  # prune reporting
                     i += 1
@@ -203,7 +206,7 @@ class MinimaxTree():
 
             # only do the move if it does not result in a board_state that has already been seen with the same score or better
             try:
-                board_score = board_states[(new_board.squares, not self.maximizing)]
+                board_score = board_states[(tuple(new_board.squares), not self.maximize)]
             except:
                 board_score = -999999
             if score > board_score:
@@ -215,24 +218,36 @@ class MinimaxTree():
                 self.children.append(MinimaxTree(new_state, move, score, self.player_nr, not self.maximize))
 
                 #update the saved board_score
-                board_states[(new_board.squares, not self.maximizing)] = score
+                board_states[(tuple(new_board.squares), not self.maximize)] = score
         if len(self.children) == 0:
             self.active = False
         return board_states
 
 
-#pruning:
-#add 2 parameters to each node: a,b
-##Only recurse into node if node.a>=node.b
-##a: Maximum value found for maximizer (max(-inf, max(child.score for child in self.children))
-##b: Minimum (best) value found for minimizer (min(inf, min(child.score for child in self.children))
-#add active, false if pruned
-#only add layers to active
+# pruning:
+# add 2 parameters to each node: a,b
+# # Only recurse into node if node.a>=node.b
+# # a: Maximum value found for maximizer (max(-inf, max(child.score for child in self.children))
+# # b: Minimum (best) value found for minimizer (min(inf, min(child.score for child in self.children))
+# add active, false if pruned
+# only add layers to active
 
 
-#new pruning idea:
-#if the same board state exists twice, only continue exploring it once
-#how to do? Dictionary of (board state, player who has turn) : best score for it
-#during expansion, look into child boardstate & see if it exists already with a higher score. If so, set to inactive
-#add the new boardstates when making new nodes
-#reset the thing when done with a layer.
+# new pruning idea:
+# if the same board state exists twice, only continue exploring it once
+# how to do? Dictionary of (board state, player who has turn) : best score for it
+# during expansion, look into child boardstate & see if it exists already with a higher score. If so, set to inactive
+# add the new boardstates when making new nodes
+# reset the thing when done with a layer.
+
+
+# with no teams running time for move 1:
+# dumb: 0, 117, 2678, layer 4 not finished
+# smart: to be ran
+
+
+# with teams running: (note: high variation)
+# dumb: 0, 1095
+#       0, 485
+# smart: 0, 420, 3308
+#       0, 489, 2837
