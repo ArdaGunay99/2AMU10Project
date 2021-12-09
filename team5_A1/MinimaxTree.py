@@ -13,6 +13,7 @@ class MinimaxTree():
         self.maximize = maximize
         self.active = True            # False if the tree is pruned. No new levels will be added to this
 
+
     def update_score(self):
         """
         Recursively updates child scores then takes them and either maximizes or minimizes score, flipping each layer of the tree.
@@ -110,31 +111,6 @@ class MinimaxTree():
                 best_move = child.move
         return(best_move)
 
-    def minimax(self, a = -9999, b = +9999):
-        """Simply copying some minimax pseudocode before figuring out how to use it"""
-        if len(self.children) == 0:
-            return self.score
-        elif self.maximize:
-            maxEva = -9999
-            for child in self.children:
-                eva = minimax(child, a, b)
-                maxEva = max(maxEva, eva)
-                a = max(a, eva)
-                if a >= b:
-                    break
-            return maxEva
-        elif not self.maximize:
-            minEva = 9999
-            for child in self.children:
-                eva = minimax(child, a, b)
-                minEva = min(minEva, eva)
-                b = min(b, eva)
-                if a >= b:
-                    break
-            return minEva
-        else:
-            raise Exception("How did you get here????")
-
     def prune(self, a = -9999, b = +9999):
         """Prunes branches that will not impact final analysis"""
         if len(self.children) == 0:
@@ -162,8 +138,87 @@ class MinimaxTree():
         else:
             raise Exception("How did you get here????")
 
+    def smart_add_layer(self, board_states = {}, indent=""):
+        """
+        Goes to the bottom of the tree and adds a layer there.
+        Uses A-B Pruning to decrease work,
+        as well as preventing going down places where the same board state
+        has already been seen with a better score.
+        """
+        # prune reporting
+        i = 0
+        j = 0
+        k = 0
+        start = time.time()
+        # prevent doing unneeded work by ab pruning the tree before adding a layer
+        self.prune()
+        # recursively check if each node has children
+        if len(self.children) > 0:
+            for child in self.children:
+                if child.active:  # do not go down pruned branches
+                    try:
+                        board_score = board_states[(child.game_state.board.squares, child.maximizing)]
+                    except:
+                        board_score = -999999
+                    if board_score < child.score: #do not go down branches where the same board position has already been encountered
+                                                   #but with a better score for us
+                        board_states[(child.game_state.board.squares, child.maximizing)] = child.score
+                        board_states = child.smart_add_layer(board_states, indent + "  ")
+                    else:
+                        child.active = False
+                        k += 1
+                else:  # prune reporting
+                    i += 1
+                j += 1
+            print(f"{indent} {int((time.time() - start) * 1000)} ms      {i} out of {j} Pruned, {k} deactivated as double boards")  # (i out of j moves are pruned)
+        # when a childless node is reached (the bottom of the tree), add children to it
+        else:
+            board_states = self.smart_add_layer_here(board_states)
+        return board_states
+
+    def smart_add_layer_here(self, board_states):
+        """
+        Adds a layer to the tree with moves that can be played now and their scores.
+        Returns the board_states, to allow setting certain boards to inactive
+        """
+        # start = time.time()
+        # find legal moves
+        legal_moves = find_legal_moves(self.game_state)
+        # print(f"{time.time()-start} legal got, length {len(legal_moves)}")
+        if len(legal_moves) == 0:
+            self.active = False
+            # turns off adding a layer to anything that has no legal moves left (finished games, mostly)
+
+        # Iterate over the legal moves and add a child in the new layer for each
+        for move in legal_moves:
+            # score the move and find out what the new point balance would be after the move is made
+            # the score is input for the new MinimaxTree, new_points is input for the new GameState.
+            score, new_points = score_move(self.game_state, move, self.player_nr, not self.maximize)
 
 
+            # create a copy of the SudokuBoard and apply the move to it, this is input for the new GameState
+            new_board = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
+            new_board.squares = self.game_state.board.squares.copy()
+            new_board.put(move.i, move.j, move.value)
+
+            # only do the move if it does not result in a board_state that has already been seen with the same score or better
+            try:
+                board_score = board_states[(new_board.squares, not self.maximizing)]
+            except:
+                board_score = -999999
+            if score > board_score:
+                new_state = GameState(self.game_state.initial_board, new_board,
+                                      self.game_state.taboo_moves.copy(), self.game_state.moves.copy(),
+                                      new_points)
+
+                # add the new MinimaxTree to the children of the current one
+                self.children.append(MinimaxTree(new_state, move, score, self.player_nr, not self.maximize))
+
+                #update the saved board_score
+                board_states[(new_board.squares, not self.maximizing)] = score
+        if len(self.children) == 0:
+            self.active = False
+        return board_states
 
 
 #pruning:
@@ -175,7 +230,9 @@ class MinimaxTree():
 #only add layers to active
 
 
-
-
-
-#
+#new pruning idea:
+#if the same board state exists twice, only continue exploring it once
+#how to do? Dictionary of (board state, player who has turn) : best score for it
+#during expansion, look into child boardstate & see if it exists already with a higher score. If so, set to inactive
+#add the new boardstates when making new nodes
+#reset the thing when done with a layer.
