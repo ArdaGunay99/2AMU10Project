@@ -50,7 +50,6 @@ def get_column(j: int, board: SudokuBoard) -> set:
     return column
 
 
-# 
 def get_block(i: int, j: int, board: SudokuBoard) -> set:
     '''
     gets the values of non-empty cells in a block
@@ -105,7 +104,27 @@ def find_legal_moves(game_state: GameState) -> list:
     return legal_moves
 
 
+def retrieve_empty_positions(i: int, j: int, region: str) -> list:
+    '''
+    Retrieves all positions of empty cells in the given region which contains the given cell
+    
+    :param i: type int. row index
+    :param j: type int. column index
+    :param region: type string. 'row','col','region'
+    '''
+
 def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool=False):
+    
+    #re-write it somewhat...
+    #add function that can check for / return number of values present in row/column/block, as well as positions
+    #use that to count 0-values and calculate score as it is now
+    #perhaps create another one to simply check for a value's presence in a row/column/block
+    #use that inside another new function calc_taboo_prob(), this function will calculate taboo probability based  on
+    #how likely within a block/column/row it is that the value will end up in that position, based on the value's presence within
+    #adjacent blocks/rows/columns
+    #hopefully this shortens the current function somewhat...
+    
+    
     '''
     Calculates a score to indicate how likely a move performed in a given GameState may lead to victory, as well as
     the new score balance if the move were to be executed.
