@@ -32,10 +32,20 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         else:
             player_nr = 2
         
+
+
+        moves_tbd = moves_left(board_copy)
+
+        # if few moves are left, play using endgame mode rather than normal tactics:
+        # try to play a taboo move on purpose to get the final move
+        if moves_tbd <= 2*board_copy.N + 1 - board_copy.N**0.5 and moves_tbd >= 3:
+            print(f"this might be the last choice, {moves_tbd} moves left")
+            if moves_tbd % 2 == 0:
+                print("and we should taboo")
+
         # Use the Minimaxtree to get the best move, as described in the report
         root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr)
         moves_ahead = 0
-        moves_tbd = moves_left(board_copy)
         while moves_ahead < moves_tbd:
             moves_ahead += 1
             # repeatedly look further into the future and get the best move found
@@ -52,4 +62,4 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         #maximum open: N + 1 per block not on the diagonal + 1
         # minimum blocks on diagonalL sqrt(n*m)
         # max blocks not on it: n*m-sqrt(n*m)
-        #total: N + n*m-sqrt(n*m) + 1
+        #total: sqrt(N) + n*m-sqrt(n*m) + 1

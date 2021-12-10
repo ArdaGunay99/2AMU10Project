@@ -111,8 +111,14 @@ class MinimaxTree():
                 best_move = child.move
         return(best_move)
 
-    def prune(self, a = -9999, b = +9999):
-        """Prunes branches that will not impact final analysis"""
+    def prune(self, a=-9999, b=9999, prune_min_dif=1):
+        """
+        Prunes branches that will not impact final analysis of score for this layer.
+        This pruning also means these moves are not explored further.
+        This requires stricter requirements, since some moves may seem bad but turn out good later.
+        Thus prune_min_dif can be used to decide when to not explore moves anymore.
+
+        """
         if len(self.children) == 0:
             return self.score
         elif self.maximize:
@@ -122,17 +128,17 @@ class MinimaxTree():
                     eva = child.prune(a, b)
                     maxEva = max(maxEva, eva)
                     a = max(a, eva)
-                else: #if needs to be pruned
+                elif a + prune_min_dif < b: #if needs to be pruned
                     child.active = False
             return maxEva
         elif not self.maximize:
             minEva = 9999
             for child in self.children:
-                if a < b:
+                if a  < b:
                     eva = child.prune( a, b)
                     minEva = min(minEva, eva)
                     b = min(b, eva)
-                else: #if needs to be pruned
+                elif a + prune_min_dif < b: #if needs to be pruned
                     child.active = False
             return minEva
         else:
