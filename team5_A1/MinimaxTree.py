@@ -46,17 +46,20 @@ class MinimaxTree():
         for move in legal_moves:
             # score the move and find out what the new point balance would be after the move is made
             # the score is input for the new MinimaxTree, new_points is input for the new GameState.
-            score, new_points = score_move(self.game_state, move, self.player_nr, not self.maximize)
+            score, new_points, taboo = score_move(self.game_state, move, self.player_nr, not self.maximize)
             
             # create a copy of the SudokuBoard and apply the move to it, this is input for the new GameState
+            
             new_board = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
             new_board.squares = self.game_state.board.squares.copy()
-            new_board.put(move.i, move.j, move.value)
+            
+            if not taboo: #if the move is not taboo, the board will change
+                new_board.put(move.i, move.j, move.value)
             
             new_state = GameState(self.game_state.initial_board, new_board,
                                   self.game_state.taboo_moves.copy(), self.game_state.moves.copy(),
                                   new_points)
-
+            
             #add the new MinimaxTree to the children of the current one
             self.children.append(MinimaxTree(new_state, move, score, self.player_nr, not self.maximize))
 

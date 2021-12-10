@@ -272,35 +272,37 @@ def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool
     taboo_prob = calc_taboo_prob(move, game_state.board, row_empty_pos, col_empty_pos, block_empty_pos) 
     
     #if the move will (almost) certainly be taboo, it will result in no move played at all and there's no point evaluating it further
-    if taboo_prob > 0.5:
-        return current_score_difference, game_state.scores
+    if taboo_prob > 0.8:
+        return current_score_difference, game_state.scores, True #True to indicate the move is likely taboo
 
     regions = 0 #variable to keep track of conquered regions
     
     #compute heuristic values for column, row and block by applying formula 1 from the A1 report to each region
     #start with column
     if col_empty_count%2 == 0: #if there's an even number of empty cells
-        col_heur = 3 / (col_empty_count + 1)
+        col_heur = 1 / (col_empty_count + 1)
         if col_empty_count == 0: #if no empty cells remain in a region, that region is conquered.
             regions += 1
     else: #if there's an uneven number of empty cells
-        col_heur = - (3 / col_empty_count)
+        col_heur = - (1 / col_empty_count)
     
     #repeat for row and block
     if row_empty_count%2 == 0:
-        row_heur = 3 / (row_empty_count + 1)
+        row_heur = 1 / (row_empty_count + 1)
         if row_empty_count == 0:
             regions += 1
     else:
-        row_heur = - (3 / row_empty_count)
+        row_heur = - (1 / row_empty_count)
         
     if block_empty_count%2 == 0:
-        block_heur = 3 / (block_empty_count + 1)
+        block_heur = 1 / (block_empty_count + 1)
         if block_empty_count == 0:
             regions += 1
     else:
-        block_heur = - (3 / block_empty_count)
-        
+        block_heur = - (1 / block_empty_count)
+       
+    position_heur_score = (col_heur+row_heur+block_heur) / 3
+    
     # calculate the points earned by making the move, based on the regions conquered.
     if regions == 0 or regions == 1:
         points = regions
@@ -316,11 +318,11 @@ def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool
         new_points = [game_state.scores[0] + points, game_state.scores[1]]
         
     # the first half of formula 2 of the report
-    final_score = taboo_prob*((col_heur + row_heur + block_heur) / 3) + 2*points
+    final_score = 2*position_heur_score + points
     
     # the second half of formula 2 of the report
     if opponent:
         # return the negative of the final score if the opponent is the one executing it
-        return -final_score + current_score_difference, new_points
+        return -final_score + current_score_difference, new_points, False
                 
-    return final_score + current_score_difference, new_points
+    return final_score + current_score_difference, new_points, False #return False to indicate the move is likely not taboo
