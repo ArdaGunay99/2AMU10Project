@@ -250,7 +250,7 @@ def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool
     #first calculate the current difference in scores (our score - opponent's score)
     if player_nr == 1:
         current_score_difference = game_state.scores[0] - game_state.scores[1]
-    elif player_nr == 2:
+    else: # player_nr == 2:
         current_score_difference = game_state.scores[1] - game_state.scores[0]
 
     board_state = game_state.board
