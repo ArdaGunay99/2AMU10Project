@@ -49,17 +49,20 @@ class MinimaxTree():
         if len(legal_moves) == 0:
             self.active = False
             # turns off adding a layer to anything that has no legal moves left (finished games, mostly)
-        
+
         # Iterate over the legal moves and add a child in the new layer for each
         for move in legal_moves:
             # score the move and find out what the new point balance would be after the move is made
             # the score is input for the new MinimaxTree, new_points is input for the new GameState.
-            score, new_points = score_move(self.game_state, move, self.player_nr, not self.maximize)
+            score, new_points, taboo = score_move(self.game_state, move, self.player_nr, not self.maximize)
             
             # create a copy of the SudokuBoard and apply the move to it, this is input for the new GameState
+
             new_board = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
             new_board.squares = self.game_state.board.squares.copy()
-            new_board.put(move.i, move.j, move.value)
+
+            if not taboo: #if the move is not taboo, the board will change
+                new_board.put(move.i, move.j, move.value)
             
             new_state = GameState(self.game_state.initial_board, new_board,
                                   self.game_state.taboo_moves.copy(), self.game_state.moves.copy(),
@@ -91,8 +94,6 @@ class MinimaxTree():
         # when a childless node is reached (the bottom of the tree), add children to it
         else:
             self.add_layer_here()
-
-
 
     def get_best_move(self) -> Move:
         """
