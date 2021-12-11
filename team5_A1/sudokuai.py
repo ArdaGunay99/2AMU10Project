@@ -52,9 +52,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             #start = time.time()
             root.smart_add_layer({})
             # root.add_layer()
-
-            self.propose_move(root.get_best_move())
-            print(f"layer {moves_ahead} added")
+            best_move, best_score = root.get_best_move()
+            self.propose_move(best_move)
+            print(f"layer {moves_ahead} added, {best_move}, {best_score}")
 
         #endgame mode: when <x moves left, try to make it so an odd number of moves left in duration of game, if even try to make taboo move
         #last moment with options: when there is still a spot where there are two openings in row, column and block for some row, column and block

@@ -110,7 +110,7 @@ class MinimaxTree():
             if child.score > best_score:
                 best_score = child.score
                 best_move = child.move
-        return(best_move)
+        return(best_move, best_score)
 
     def prune(self, a=-9999, b=9999, prune_min_dif=1):
         """
