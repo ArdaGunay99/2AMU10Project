@@ -1,11 +1,11 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
-from .Extra import find_legal_moves, score_move
+from .Extra import get_block, get_column, get_row
 import time
 
-def endgame(game_state):
+def endgame(board):
     """
     tries to find a move that will be declared taboo
-    :param game_state: The current gamestate
+    :param board: The current board
     :return:
     """
 
@@ -21,3 +21,8 @@ def endgame(game_state):
     # 4 ║  -  │  3  ║  4  │  2  ║
     #   ╚═════╧═════╩═════╧═════╝
     # eg.: here play (2,1) -> 1, to prevent the forced move on the bottom row
+
+    #finding a forced move:
+    #this probably implemented by rozanne!
+
+
