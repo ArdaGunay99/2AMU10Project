@@ -108,7 +108,7 @@ class MinimaxTree():
         best_move = None
         # iterate over the children (current possible moves to make) and return the move with the highest score
         for child in self.children:
-            if child.score > best_score:
+            if child.score > best_score and child.active:
                 best_score = child.score
                 best_move = child.move
         return(best_move, best_score)
@@ -250,7 +250,6 @@ class MinimaxTree():
                 max_score = child.score
                 best_move = child
         print(self.print_best_move_path())
-        print(self.maximize)
 
     def print_best_move_path(self) -> List[Move]:
         """
