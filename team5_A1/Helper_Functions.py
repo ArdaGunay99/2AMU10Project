@@ -1,11 +1,23 @@
 import itertools
-from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
+import math
+
+from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove, print_board
 
 
-def possible(i: int, j: int, value: int, game_state: GameState) -> bool:
+def find_empty_cell(board: SudokuBoard):
+
+    for i in range(board.N):
+        for j in range(board.N):
+            if board.get(i, j) == SudokuBoard.empty:
+                return i, j
+    return None, None
+
+
+def possible(i: int, j: int, value: int, board: SudokuBoard, game_state: GameState) -> bool:
     '''
     checks if a move is in the list of taboo moves.
     
+    :param board:
     :param i: type int. Row index of the move.
     :param j: type int. Column index of the move.
     :param value: type int. Value of the move.
@@ -13,7 +25,29 @@ def possible(i: int, j: int, value: int, game_state: GameState) -> bool:
     
     :return: type bool. True if the move is NOT a taboo move, False if it is.
     '''
-    return not TabooMove(i, j, value) in game_state.taboo_moves
+    if not TabooMove(i, j, value) in game_state.taboo_moves:
+        N = board.N
+        # check row for the value
+        for column in range(N):
+            if board.get(i, column) == value:
+                return False
+        # check column for the value
+        for row in range(N):
+            if board.get(row, j) == value:
+                return False
+
+            # row index of the top left cell of the block
+        start_row = math.floor(i / board.m) * board.m
+        # column index of the top left cell of the block
+        start_col = math.floor(j / board.n) * board.n
+        # check block for the value
+        for row in range(start_row, start_row + board.m):
+            for col in range(start_col, start_col + board.n):
+                if board.get(row, col) == value:
+                    return False
+        return True
+    else:
+        return False
 
 
 def get_row(i: int, board: SudokuBoard) -> set:
@@ -102,24 +136,87 @@ def find_legal_moves(game_state: GameState) -> list:
     board = game_state.board
     N = board.N
     legal_moves = []
-    
+    empty_count = 0
+
     # loop over all positions on the board
     for i in range(N):
-        row = get_row(i, board)
+        # row = get_row(i, board)
         for j in range(N):
             if board.get(i, j) == board.empty:
-                column = get_column(j, board)
-                block = get_block(i, j, board)
+                # empty_count += 1
+                # column = get_column(j, board)
+                # block = get_block(i, j, board)
                 for value in range(1, N + 1):
                     # on each position and for each value, check that the move is not a taboo move
-                    if possible(i, j, value, game_state):
-                        # and check that the current value is not already present in one of the current board positions regions
-                        if value in block or value in column or value in row:
-                            continue
-                        else:
-                            legal_moves.append(Move(i, j, value))
+                    if possible(i, j, value, board, game_state):
+                        # and check that the current value is not already present
+                        # in one of the current board positions regions
+                        # if value in block or value in column or value in row:
+                        #     continue
+                        # else:
+                        legal_moves.append(Move(i, j, value))
+
+    # best_moves = []
+    # mediocre_moves = []
+    # bad_moves = []
+    # if N**2 - empty_count >= N-1:
+    #     moves_dict = dict()
+    #     for move in range(len(legal_moves)):
+    #         if (legal_moves[move].i, legal_moves[move].j) in moves_dict.keys():
+    #             temp = moves_dict.get((legal_moves[move].i, legal_moves[move].j))
+    #             temp.append(legal_moves[move].value)
+    #             moves_dict.update({(legal_moves[move].i, legal_moves[move].j): temp})
+    #         else:
+    #             moves_dict.update({(legal_moves[move].i, legal_moves[move].j): [legal_moves[move].value]})
+    #
+    #     for key, value in moves_dict.items():
+    #         if len(value) == 1:
+    #             best_moves.append(Move(key[0], key[1], value[0]))
+    #         elif len(value) == 2:
+    #             mediocre_moves.append(Move(key[0], key[1], value[0]))
+    #             mediocre_moves.append(Move(key[0], key[1], value[1]))
+    #         else:
+    #             for i in range(len(value)):
+    #                 bad_moves.append(Move(key[0], key[1], value[i]))
 
     return legal_moves
+
+
+def fill_board(board: SudokuBoard, game_state: GameState):
+    N = board.N
+    # actual_moves = []
+    # empty_count = 0
+
+    # i, j = find_empty_cell(board)
+    # if i is None:
+    #     return True
+    for i in range(board.N):
+        for j in range(board.N):
+            if board.get(i, j) == SudokuBoard.empty:
+                for value in range(1, N + 1):
+                    if possible(i, j, value, board, game_state):
+                        board.put(i, j, value)
+                        if fill_board(board, game_state):
+                            return True
+                    board.put(i, j, SudokuBoard.empty)
+                return False
+    return True
+
+
+def find_actual_moves(board: SudokuBoard, game_state: GameState):
+    N = board.N
+    actual_moves = []
+    fill_board(board, game_state)
+    # print(print_board(board))
+
+    for i in range(N):
+        for j in range(N):
+            if game_state.board.get(i, j) == SudokuBoard.empty:
+                actual_moves.append(Move(i, j, board.get(i, j)))
+                # print("added to list", Move(i, j, board.get(i, j)))
+
+    return actual_moves
+
 
 
 def retrieve_empty_cells(i: int, j: int, region: str, board: SudokuBoard) -> set:

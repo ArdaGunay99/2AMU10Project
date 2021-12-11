@@ -1,8 +1,7 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
-from .Extra import find_legal_moves, score_move
+from .Helper_Functions import find_legal_moves, score_move, find_actual_moves
 import time
 from typing import List
-
 
 class MinimaxTree():
     def __init__(self, game_state: GameState, move: Move, score: float, player_nr: int, maximize=True):
@@ -45,13 +44,12 @@ class MinimaxTree():
         """
         # start = time.time()
         # find legal moves
-        legal_moves = find_legal_moves(self.game_state)
-        # print(f"{time.time()-start} legal got, length {len(legal_moves)}")
+        board_copy = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
+        board_copy.squares = self.game_state.board.squares.copy()
+        legal_moves = find_actual_moves(board_copy, self.game_state)
         if len(legal_moves) == 0:
             self.active = False
-            # turns off adding a layer to anything that has no legal moves left (finished games, mostly)
-
-        # Iterate over the legal moves and add a child in the new layer for each
+        # Iterate ove the legal moves and add a child in the new layer for each
         for move in legal_moves:
             # score the move and find out what the new point balance would be after the move is made
             # the score is input for the new MinimaxTree, new_points is input for the new GameState.
@@ -194,8 +192,9 @@ class MinimaxTree():
         """
         # start = time.time()
         # find legal moves
-        legal_moves = find_legal_moves(self.game_state)
-        # print(f"{time.time()-start} legal got, length {len(legal_moves)}")
+        board_copy = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
+        board_copy.squares = self.game_state.board.squares.copy()
+        legal_moves = find_actual_moves(board_copy, self.game_state)
         if len(legal_moves) == 0:
             self.active = False
             # turns off adding a layer to anything that has no legal moves left (finished games, mostly)

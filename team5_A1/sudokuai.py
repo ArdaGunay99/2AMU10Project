@@ -5,7 +5,7 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
 import competitive_sudoku.sudokuai
 from .MinimaxTree import MinimaxTree
-from .Extra import moves_left
+from .Helper_Functions import moves_left
 #import time
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
@@ -31,7 +31,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             player_nr = 1
         else:
             player_nr = 2
-        
+
 
 
         moves_tbd = moves_left(board_copy)
