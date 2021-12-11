@@ -1,6 +1,7 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
 from .Extra import find_legal_moves, score_move
 import time
+from typing import List
 
 
 class MinimaxTree():
@@ -209,7 +210,14 @@ class MinimaxTree():
             # create a copy of the SudokuBoard and apply the move to it, this is input for the new GameState
             new_board = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
             new_board.squares = self.game_state.board.squares.copy()
-            new_board.put(move.i, move.j, move.value)
+            new_taboo = self.game_state.taboo_moves.copy()
+            new_moves = self.game_state.moves.copy()
+            if not taboo:  # if the move is not taboo, the board will change
+                new_board.put(move.i, move.j, move.value)
+                new_moves.append(move)
+            else:
+                new_taboo = new_taboo.append(TabooMove(move.i, move.j, move.value))
+                new_moves.append(TabooMove(move.i, move.j, move.value))
 
             # only do the move if it does not result in a board_state that has already been seen with the same score or better
             try:
@@ -218,7 +226,7 @@ class MinimaxTree():
                 board_score = -999999
             if score > board_score:
                 new_state = GameState(self.game_state.initial_board, new_board,
-                                      self.game_state.taboo_moves.copy(), self.game_state.moves.copy(),
+                                      new_taboo, new_moves,
                                       new_points)
 
                 # add the new MinimaxTree to the children of the current one
