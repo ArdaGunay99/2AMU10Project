@@ -1,4 +1,4 @@
-from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
+from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 from .Extra import find_legal_moves, score_move
 import time
 from typing import List
@@ -216,7 +216,7 @@ class MinimaxTree():
                 new_board.put(move.i, move.j, move.value)
                 new_moves.append(move)
             else:
-                new_taboo = new_taboo.append(TabooMove(move.i, move.j, move.value))
+                new_taboo.append(TabooMove(move.i, move.j, move.value))
                 new_moves.append(TabooMove(move.i, move.j, move.value))
 
             # only do the move if it does not result in a board_state that has already been seen with the same score or better
@@ -238,6 +238,37 @@ class MinimaxTree():
             self.active = False
         return board_states
 
+    def print_move_scores(self):
+        """
+        Prints the move-score combo of each child move
+        :return:
+        """
+        max_score = -9999
+        for child in self.children:
+            print(f"{child.move} : {child.score}")
+            if child.score > max_score:
+                max_score = child.score
+                best_move = child
+        print(self.print_best_move_path())
+        print(self.maximize)
+
+    def print_best_move_path(self) -> List[Move]:
+        """
+        returns the path of moves that are the moves minimax thinks a rational agent & opponent will make
+        (useful for debugging when the AI makes seemingly bad decisions)
+        :return: List[move]
+        """
+        if not self.children:
+            return [str(self.move)]
+
+        best_score = -99999999
+        best_move = None
+        # iterate over the children (current possible moves to make) and return the move with the highest score
+        for child in self.children:
+            if child.score > best_score:
+                best_score = child.score
+                best_move = child.move
+        return [str(best_move)] + child.print_best_move_path()
 
 # pruning:
 # add 2 parameters to each node: a,b

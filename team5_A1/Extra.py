@@ -326,7 +326,7 @@ def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool
         # return the negative of the final score if the opponent is the one executing it
         return -final_score + current_score_difference, new_points, False
                 
-    return final_score + current_score_difference, new_points, False #return False to indicate the move is likely not taboo
+    return final_score + current_score_difference, new_points, False # return False to indicate the move is likely not taboo
 
 def moves_left(board : SudokuBoard):
     """

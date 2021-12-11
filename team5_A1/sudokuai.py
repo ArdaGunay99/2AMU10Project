@@ -54,6 +54,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             # root.add_layer()
             best_move, best_score = root.get_best_move()
             self.propose_move(best_move)
+            root.print_move_scores()
             print(f"layer {moves_ahead} added, {best_move}, {best_score}")
 
         #endgame mode: when <x moves left, try to make it so an odd number of moves left in duration of game, if even try to make taboo move
