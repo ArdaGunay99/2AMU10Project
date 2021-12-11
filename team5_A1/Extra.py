@@ -246,6 +246,7 @@ def score_move(game_state: GameState, move: Move, player_nr: int, opponent: bool
     
     :return: type float. The score given to the move when performed in the current GameState.
     :return: type list. The new score balance ([score-player1, score-player2]) if the move were to be executed in the current GameState
+    :return type bool. The expected tabooness of the move.
     '''
     #first calculate the current difference in scores (our score - opponent's score)
     if player_nr == 1:
