@@ -5,7 +5,7 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
 import competitive_sudoku.sudokuai
 from .MinimaxTree import MinimaxTree
-from .Helper_Functions import moves_left, find_actual_moves
+from .Helper_Functions import moves_left, find_actual_moves, find_legal_moves
 import copy
 #import time
 
@@ -26,7 +26,10 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         game_copy = GameState(game_state.initial_board, board_copy,
                               game_state.taboo_moves.copy(), game_state.moves.copy(),
                               game_state.scores.copy())
-        
+
+        #play a random move so we don't get disqualified
+        self.propose_move(find_legal_moves(game_state, True))
+
         # Check whether we are the first or the second player, also input for the Minimaxtree
         if len(game_copy.moves) % 2 == 0:
             player_nr = 1

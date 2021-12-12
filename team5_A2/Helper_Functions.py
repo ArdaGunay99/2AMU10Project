@@ -125,7 +125,7 @@ def get_block(i: int, j: int, board: SudokuBoard) -> set:
     return block
 
 
-def find_legal_moves(game_state: GameState) -> list:
+def find_legal_moves(game_state: GameState, give_first = False) -> list:
     ''' 
     finds all possible legal moves in a given game state
     
@@ -155,6 +155,8 @@ def find_legal_moves(game_state: GameState) -> list:
                         #     continue
                         # else:
                         legal_moves.append(Move(i, j, value))
+                        if give_first:
+                            return Move(i,j,value)
 
     best_moves = []
     mediocre_moves = []
