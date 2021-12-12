@@ -180,6 +180,9 @@ class MinimaxTree():
                 else:  # prune reporting
                     i += 1
                 j += 1
+            if k + i >= j and j > 0:
+                #if all children are invactive, deactivate this branch
+                self.active = False
             print(f"{indent} {int((time.time() - start) * 1000)} ms      {i} out of {j} Pruned, {k} deactivated as double boards")  # (i out of j moves are pruned)
         # when a childless node is reached (the bottom of the tree), add children to it
         else:
@@ -195,9 +198,10 @@ class MinimaxTree():
         # find legal moves
         board_copy = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
         board_copy.squares = self.game_state.board.squares.copy()
-        if len(self.moves) == 0:
-            self.active = False
-            # turns off adding a layer to anything that has no legal moves left (finished games, mostly)
+        # if len(self.moves) == 0:
+        #     self.active = False
+        #     # turns off adding a layer to anything that has no legal moves left (finished games, mostly)
+        #     pass
 
         # Iterate over the legal moves and add a child in the new layer for each
         for move in self.moves:
@@ -223,19 +227,20 @@ class MinimaxTree():
                 board_score = board_states[(tuple(new_board.squares), not self.maximize)]
             except:
                 board_score = -999999
-            if score > board_score:
+            if score > board_score-10:
                 new_state = GameState(self.game_state.initial_board, new_board,
                                       new_taboo, new_moves_played,
                                       new_points)
                 new_moves = self.moves.copy()
                 new_moves.remove(move)
+                #print(move, [str(i) for i in self.moves], [str(i) for i in new_moves])
                 # add the new MinimaxTree to the children of the current one
                 self.children.append(MinimaxTree(new_state, move, score, self.player_nr, new_moves, not self.maximize))
 
                 #update the saved board_score
                 board_states[(tuple(new_board.squares), not self.maximize)] = score
-        if len(self.children) == 0:
-            self.active = False
+        # if len(self.children) == 0:
+        #     self.active = False
         return board_states
 
     def print_move_scores(self):
@@ -245,7 +250,7 @@ class MinimaxTree():
         """
         max_score = -9999
         for child in self.children:
-            print(f"{child.move} : {child.score}")
+            print(f"{child.move} : {child.score}, {child.active}")
             if child.score > max_score:
                 max_score = child.score
                 best_move = child
@@ -258,16 +263,33 @@ class MinimaxTree():
         :return: List[move]
         """
         if not self.children:
-            return [str(self.move)]
+            return [("end", self.score)]
+        if self.maximize:
+            best_score = -99999999
+            best_move = None
+            best_child = None
+            # iterate over the children (current possible moves to make) and return the move with the highest score
+            for child in self.children:
+                if child.score > best_score and child.active:
+                    best_score = child.score
+                    best_move = child.move
+                    best_child = child
 
-        best_score = -99999999
-        best_move = None
-        # iterate over the children (current possible moves to make) and return the move with the highest score
-        for child in self.children:
-            if child.score > best_score:
-                best_score = child.score
-                best_move = child.move
-        return [str(best_move)] + child.print_best_move_path()
+        else:
+            best_score = 99999999
+            best_move = None
+            best_child = None
+            # iterate over the children (current possible moves to make) and return the move with the lowest score
+            for child in self.children:
+                if child.score < best_score and child.active:
+                    best_score = child.score
+                    best_move = child.move
+                    best_child = child
+        if best_child != None:
+            return [str(best_move)] + best_child.print_best_move_path()
+        else:
+            return ["error: reached inactive node"]
+
 
 # pruning:
 # add 2 parameters to each node: a,b
