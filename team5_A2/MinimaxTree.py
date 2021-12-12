@@ -198,7 +198,7 @@ class MinimaxTree():
         # find legal moves
         board_copy = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
         board_copy.squares = self.game_state.board.squares.copy()
-        best_moves, mediocre_moves, bad_moves = find_legal_moves(game_state)
+        best_moves, mediocre_moves, bad_moves = find_legal_moves(self.game_state)
 
         if len(best_moves) > 1:
             moves = best_moves

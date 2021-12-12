@@ -159,25 +159,25 @@ def find_legal_moves(game_state: GameState) -> list:
     best_moves = []
     mediocre_moves = []
     bad_moves = []
-    if N**2 - empty_count >= N-1:
-        moves_dict = dict()
-        for move in range(len(legal_moves)):
-            if (legal_moves[move].i, legal_moves[move].j) in moves_dict.keys():
-                temp = moves_dict.get((legal_moves[move].i, legal_moves[move].j))
-                temp.append(legal_moves[move].value)
-                moves_dict.update({(legal_moves[move].i, legal_moves[move].j): temp})
-            else:
-                moves_dict.update({(legal_moves[move].i, legal_moves[move].j): [legal_moves[move].value]})
 
-        for key, value in moves_dict.items():
-            if len(value) == 1:
-                best_moves.append(Move(key[0], key[1], value[0]))
-            elif len(value) == 2:
-                mediocre_moves.append(Move(key[0], key[1], value[0]))
-                mediocre_moves.append(Move(key[0], key[1], value[1]))
-            else:
-                for i in range(len(value)):
-                    bad_moves.append(Move(key[0], key[1], value[i]))
+    moves_dict = dict()
+    for move in range(len(legal_moves)):
+        if (legal_moves[move].i, legal_moves[move].j) in moves_dict.keys():
+            temp = moves_dict[(legal_moves[move].i, legal_moves[move].j)]
+            temp.append(legal_moves[move].value)
+            moves_dict[(legal_moves[move].i, legal_moves[move].j)] = temp
+        else:
+            moves_dict[(legal_moves[move].i, legal_moves[move].j)] = [legal_moves[move].value]
+
+    for key, value in moves_dict.items():
+        if len(value) == 1:
+            best_moves.append(Move(key[0], key[1], value[0]))
+        elif len(value) == 2:
+            mediocre_moves.append(Move(key[0], key[1], value[0]))
+            mediocre_moves.append(Move(key[0], key[1], value[1]))
+        else:
+            for i in range(len(value)):
+                bad_moves.append(Move(key[0], key[1], value[i]))
 
     return best_moves, mediocre_moves, bad_moves
 
