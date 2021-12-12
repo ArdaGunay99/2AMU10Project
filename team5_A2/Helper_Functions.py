@@ -182,10 +182,11 @@ def find_legal_moves(game_state: GameState) -> list:
     return legal_moves
 
 
-def fill_board(board: SudokuBoard, game_state: GameState):
+def fill_board(board: SudokuBoard, game_state: GameState, in_board={}, recurse_counter = 0):
     N = board.N
     # actual_moves = []
     # empty_count = 0
+
 
     # i, j = find_empty_cell(board)
     # if i is None:
@@ -194,12 +195,26 @@ def fill_board(board: SudokuBoard, game_state: GameState):
         for j in range(board.N):
             if board.get(i, j) == SudokuBoard.empty:
                 for value in range(1, N + 1):
-                    if possible(i, j, value, board, game_state):
-                        board.put(i, j, value)
-                        if fill_board(board, game_state):
-                            return True
-                    board.put(i, j, SudokuBoard.empty)
+                    try:
+                        test = in_board[("r", i, value)]
+                        test2 = in_board[("c", j, value)]
+                    except:
+                        test = False
+                        test2 = False
+                    if not test and not test2:
+                        if possible(i, j, value, board, game_state):
+                            board.put(i, j, value)
+                            print(recurse_counter * " ", value, recurse_counter)
+                            if fill_board(board, game_state, in_board, recurse_counter + 1):
+                                return True
+                            board.put(i, j, SudokuBoard.empty)
+                            in_board[("r", i, value)] = False
+                            in_board[("c", j, value)] = False
+                #no value fits in this square.
                 return False
+            else:
+                in_board[("r", i, board.get(i, j))] = True
+                in_board[("c", j, board.get(i,j))] = True
     return True
 
 
@@ -207,7 +222,7 @@ def find_actual_moves(board: SudokuBoard, game_state: GameState):
     N = board.N
     actual_moves = []
     fill_board(board, game_state)
-    # print(print_board(board))
+    #print(print_board(board))
 
     for i in range(N):
         for j in range(N):
