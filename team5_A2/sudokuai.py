@@ -7,6 +7,7 @@ import competitive_sudoku.sudokuai
 from .MinimaxTree import MinimaxTree
 from .Helper_Functions import moves_left, find_actual_moves, find_legal_moves
 import copy
+from Endgame import find_taboo_move
 #import time
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
@@ -39,13 +40,17 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
 
 
         moves_tbd = moves_left(board_copy)
+        min_score = -999999 # minimum score for a move before we actually suggest it
 
         # if few moves are left, play using endgame mode rather than normal tactics:
         # try to play a taboo move on purpose to get the final move
+        # we increase min_score so we don't undo this for a 1 point gain but do for eg. a 3 or 7 point gain
         if moves_tbd <= 2*board_copy.N + 1 - board_copy.N**0.5 and moves_tbd >= 3:
             print(f"this might be the last choice, {moves_tbd} moves left")
             if moves_tbd % 2 == 0:
                 print("and we should taboo")
+                self.propose_move(find_taboo_move(game_state))
+                min_score = 3
 
         # Use the Minimaxtree to get the best move, as described in the report
         #moves = find_actual_moves(copy.deepcopy(board_copy), game_copy)
@@ -58,7 +63,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             root.smart_add_layer({})
             # root.add_layer()
             best_move, best_score = root.get_best_move()
-            self.propose_move(best_move)
+            if best_score > min_score:
+                self.propose_move(best_move)
             root.print_move_scores()
             print(f"layer {moves_ahead} added, {best_move}, {best_score}")
 
