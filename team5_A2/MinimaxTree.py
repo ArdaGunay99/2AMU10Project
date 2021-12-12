@@ -1,3 +1,5 @@
+import math
+
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove
 from .Helper_Functions import find_legal_moves, score_move, find_actual_moves
 import time
@@ -103,7 +105,7 @@ class MinimaxTree():
         """
         self.update_score()  # update the scores so children's scores are correct
 
-        best_score = -99999999
+        best_score = -math.inf
         best_move = None
         # iterate over the children (current possible moves to make) and return the move with the highest score
         for child in self.children:
@@ -112,7 +114,7 @@ class MinimaxTree():
                 best_move = child.move
         return(best_move, best_score)
 
-    def prune(self, a=-9999, b=9999, prune_min_dif=1):
+    def prune(self, a=-math.inf, b=math.inf, prune_min_dif=1):
         """
         Prunes branches that will not impact final analysis of score for this layer.
         This pruning also means these moves are not explored further.
@@ -234,7 +236,7 @@ class MinimaxTree():
             try:
                 board_score = board_states[(tuple(new_board.squares), not self.maximize)]
             except:
-                board_score = -999999
+                board_score = -math.inf
             if score > board_score-10:
                 new_state = GameState(self.game_state.initial_board, new_board,
                                       new_taboo, new_moves_played,
@@ -254,7 +256,7 @@ class MinimaxTree():
         Prints the move-score combo of each child move
         :return:
         """
-        max_score = -9999
+        max_score = -math.inf
         for child in self.children:
             print(f"{child.move} : {child.score}, {child.active}")
             if child.score > max_score:
@@ -271,7 +273,7 @@ class MinimaxTree():
         if not self.children:
             return [("end", self.score)]
         if self.maximize:
-            best_score = -99999999
+            best_score = -math.inf
             best_move = None
             best_child = None
             # iterate over the children (current possible moves to make) and return the move with the highest score
@@ -282,7 +284,7 @@ class MinimaxTree():
                     best_child = child
 
         else:
-            best_score = 99999999
+            best_score = math.inf
             best_move = None
             best_child = None
             # iterate over the children (current possible moves to make) and return the move with the lowest score
