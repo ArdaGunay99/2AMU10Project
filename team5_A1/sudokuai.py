@@ -5,7 +5,8 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
 import competitive_sudoku.sudokuai
 from .MinimaxTree import MinimaxTree
-from .Helper_Functions import moves_left
+from .Helper_Functions import moves_left, find_actual_moves
+import copy
 #import time
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
@@ -44,7 +45,8 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
                 print("and we should taboo")
 
         # Use the Minimaxtree to get the best move, as described in the report
-        root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr)
+        moves = find_actual_moves(copy.deepcopy(board_copy), game_copy)
+        root = MinimaxTree(game_copy, Move(0, 0, 0), 0, player_nr, moves)
         moves_ahead = 0
         while moves_ahead < moves_tbd:
             moves_ahead += 1
