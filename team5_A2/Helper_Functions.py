@@ -1,5 +1,6 @@
 import itertools
 import math
+import random
 
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, TabooMove, print_board
 
@@ -155,9 +156,9 @@ def find_legal_moves(game_state: GameState, give_first = False) -> list:
                         #     continue
                         # else:
                         legal_moves.append(Move(i, j, value))
-                        if give_first:
-                            return Move(i,j,value)
 
+    if give_first:
+        return random.choice(legal_moves)
     best_moves = []
     mediocre_moves = []
     bad_moves = []
