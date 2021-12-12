@@ -183,6 +183,14 @@ def find_legal_moves(game_state: GameState) -> list:
 
 
 def fill_board(board: SudokuBoard, game_state: GameState, in_board={}, recurse_counter = 0):
+    """
+
+    :param board: 
+    :param game_state:
+    :param in_board:
+    :param recurse_counter:
+    :return:
+    """
     N = board.N
     # actual_moves = []
     # empty_count = 0
