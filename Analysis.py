@@ -11,7 +11,7 @@ players = [("team5_A2","greedy_player"), ("greedy_player","team5_A2"), ("team5_A
 boards = ["empty-3x3","random-3x3","hard-3x3","empty-4x4","random-4x4"]
 time = rep*['0.1'] + rep*['0.5'] + rep*['1.0'] + rep*['5.0']
 
-i = 0 #keep track of iterations and make checkpoints in case smth goes wrong, so nothing is lost
+i = 1 #keep track of iterations and make checkpoints in case smth goes wrong, so nothing is lost
 for p in players:
     print(f"Testing {p}")
     for b in boards:
@@ -32,6 +32,8 @@ for p in players:
             if i%50==0:
                 results = pd.DataFrame(data = result_dict)
                 results.to_csv(f'checkpoint{i}.csv',index=False)
+                
+            i += 1
 
 results = pd.DataFrame(data = result_dict)
 results.to_csv("final-results.csv",index=False)
