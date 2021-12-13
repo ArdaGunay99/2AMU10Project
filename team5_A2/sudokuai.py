@@ -7,7 +7,7 @@ import competitive_sudoku.sudokuai
 from .MinimaxTree import MinimaxTree
 from .Helper_Functions import moves_left, find_actual_moves, find_legal_moves
 import copy
-from Endgame import find_taboo_move
+from .Endgame import find_taboo_move
 #import time
 
 class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
