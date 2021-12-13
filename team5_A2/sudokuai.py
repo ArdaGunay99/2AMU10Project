@@ -37,7 +37,11 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         else:
             player_nr = 2
 
-
+        #find out how many points we are ahead/behind
+        if player_nr == 1:
+            current_score_difference = game_state.scores[0] - game_state.scores[1]
+        else:  # player_nr == 2:
+            current_score_difference = game_state.scores[1] - game_state.scores[0]
 
         moves_tbd = moves_left(board_copy)
         min_score = -999999 # minimum score for a move before we actually suggest it
@@ -63,7 +67,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             root.smart_add_layer({})
             # root.add_layer()
             best_move, best_score = root.get_best_move()
-            if best_score > min_score:
+            if best_score - current_score_difference > min_score:
                 self.propose_move(best_move)
             root.print_move_scores()
             print(f"layer {moves_ahead} added, {best_move}, {best_score}")
