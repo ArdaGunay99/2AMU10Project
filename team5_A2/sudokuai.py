@@ -53,7 +53,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             #print(f"this might be the last choice, {moves_tbd} moves left")
             if moves_tbd % 2 == 0:
                 #print("and we should taboo")
-                self.propose_move(find_taboo_move(game_state))
+                taboo_move = find_taboo_move(game_state)
+                if taboo_move is not None:
+                    self.propose_move(taboo_move)
                 min_score = 3
 
         # Use the Minimaxtree to get the best move, as described in the report
