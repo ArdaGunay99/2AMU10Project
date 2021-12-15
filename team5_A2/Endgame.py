@@ -7,7 +7,7 @@ def find_taboo_move(game_state):
     """
     tries to find a move that will be declared taboo
     :param game_state: The current game_state
-    :return:
+    :return: type Move. A move that will be declared taboo
     """
 
     board = game_state.board
