@@ -155,6 +155,7 @@ def find_legal_moves(game_state: GameState, give_first=False) -> list:
     bad_moves = []
 
     moves_dict = dict()
+    #create a dictionary for with move-positions as keys and all possible move values as values
     for move in range(len(legal_moves)):
         if (legal_moves[move].i, legal_moves[move].j) in moves_dict.keys():
             temp = moves_dict[(legal_moves[move].i, legal_moves[move].j)]
@@ -164,11 +165,14 @@ def find_legal_moves(game_state: GameState, give_first=False) -> list:
             moves_dict[(legal_moves[move].i, legal_moves[move].j)] = [legal_moves[move].value]
 
     for key, value in moves_dict.items():
+        #best_moves are moves with 1 possible value
         if len(value) == 1:
             best_moves.append(Move(key[0], key[1], value[0]))
+        #mediocre moves have 2 possible values
         elif len(value) == 2:
             mediocre_moves.append(Move(key[0], key[1], value[0]))
             mediocre_moves.append(Move(key[0], key[1], value[1]))
+        #bad moves have more than 2 possible values
         else:
             for i in range(len(value)):
                 bad_moves.append(Move(key[0], key[1], value[i]))
@@ -251,6 +255,7 @@ def retrieve_empty_cells(i: int, j: int, region: str, board: SudokuBoard) -> set
     empty_pos = set([])
 
     if region == 'row':
+        #loop over all cells in a region that are empty and create a set of them to return
         for x in itertools.filterfalse(lambda y: board.get(i, y) != board.empty, range(board.N)):
             empty_pos.add((i, x))
 
