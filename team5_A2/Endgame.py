@@ -1,6 +1,7 @@
 from competitive_sudoku.sudoku import GameState, Move, SudokuBoard
-from .Helper_Functions import get_block, get_column, get_row
+from .Helper_Functions import get_block, get_column, get_row, possible
 import time
+import math
 
 def find_taboo_move(game_state):
     """
