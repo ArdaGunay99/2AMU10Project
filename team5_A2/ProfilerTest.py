@@ -4,8 +4,9 @@ from competitive_sudoku.sudoku import GameState, Move, SudokuBoard, load_sudoku_
 from pathlib import Path
 import copy
 
-#manually make a gamestate by loading in a board
-#fun the gamestate on the ai
+#this file is used to test our AI using very specific circumstances.
+#we manually make a gamestate by loading in a board
+#and run the ai on the gamestate
 
 
 board_text = Path("../boards/hard-3x3.txt").read_text()

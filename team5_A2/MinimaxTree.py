@@ -44,6 +44,7 @@ class MinimaxTree():
     def add_layer_here(self):
         """
         Adds a layer to the tree with moves that can be played now and their scores.
+        Obsolete, replaced by smart_add_layer_here
         """
         # start = time.time()
         # find legal moves
