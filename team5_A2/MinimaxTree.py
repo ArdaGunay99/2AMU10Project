@@ -185,7 +185,7 @@ class MinimaxTree():
                         board_states = child.smart_add_layer(board_states, indent + "  ")
                     else:
                         child.active = False
-                        print(f"{indent} deactivating branch {j}")
+                        #print(f"{indent} deactivating branch {j}")
                         k += 1
                 else:  # prune reporting
                     i += 1

@@ -50,9 +50,9 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         # try to play a taboo move on purpose to get the final move
         # we increase min_score so we don't undo this for a 1 point gain but do for eg. a 3 or 7 point gain
         if moves_tbd <= 2*board_copy.N + 1 - board_copy.N**0.5 and moves_tbd >= 3:
-            print(f"this might be the last choice, {moves_tbd} moves left")
+            #print(f"this might be the last choice, {moves_tbd} moves left")
             if moves_tbd % 2 == 0:
-                print("and we should taboo")
+                #print("and we should taboo")
                 self.propose_move(find_taboo_move(game_state))
                 min_score = 3
 
@@ -69,7 +69,7 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
             best_move, best_score = root.get_best_move()
             if best_score - current_score_difference > min_score:
                 self.propose_move(best_move)
-            root.print_move_scores()
+            #root.print_move_scores()
             print(f"layer {moves_ahead} added, {best_move}, {best_score}")
 
         #endgame mode: when <x moves left, try to make it so an odd number of moves left in duration of game, if even try to make taboo move
