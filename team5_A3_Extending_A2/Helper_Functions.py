@@ -125,11 +125,12 @@ def find_legal_moves(game_state: GameState, give_first=False) -> list:
     :param give_first: type Bool. if True, a random move from the list of moves will be returned.
     :param game_state: type GameState. the current GameState.
     
-    :return: type list. 3 lists containing good, mediocre and bad legal moves possible in the current GameState
+    :return: type dict. Keys are numbers of how many moves are available,
+                        values are moves in squares with that many moves possible in the current GameState
     '''
     board = game_state.board
     N = board.N
-    legal_moves = []
+    legal_moves = {}
     empty_count = 0
 
     # loop over all positions on the board
@@ -142,42 +143,24 @@ def find_legal_moves(game_state: GameState, give_first=False) -> list:
                     # and check that the current value is not already present
                     # in one of the current board positions regions
                     if possible(i, j, value, board, game_state):
-                        legal_moves.append(Move(i, j, value))
+                        try:
+                            legal_moves[(i,j)].append(Move(i, j, value))
+                        except KeyError:
+                            legal_moves[(i,j)] = [Move(i,j,value)]
 
     # return a randomly selected move so that the agent does not run out of time on larger boards
     if give_first:
-        return random.choice(legal_moves)
-    # list of moves for cells with only one legal option
-    best_moves = []
-    # list of moves for cells with 2 legal options
-    mediocre_moves = []
-    # list of moves for cells with more than 2 legal options
-    bad_moves = []
+        return random.choice(random.choice(legal_moves.values()))
 
-    moves_dict = dict()
-    #create a dictionary for with move-positions as keys and all possible move values as values
-    for move in range(len(legal_moves)):
-        if (legal_moves[move].i, legal_moves[move].j) in moves_dict.keys():
-            temp = moves_dict[(legal_moves[move].i, legal_moves[move].j)]
-            temp.append(legal_moves[move].value)
-            moves_dict[(legal_moves[move].i, legal_moves[move].j)] = temp
-        else:
-            moves_dict[(legal_moves[move].i, legal_moves[move].j)] = [legal_moves[move].value]
+    move_dict = {}
+    for key, value in legal_moves.items():
+        try:
+            for move in value:
+                move_dict[len(value)].append(move)
+        except:
+            move_dict[len(value)] = value
 
-    for key, value in moves_dict.items():
-        #best_moves are moves with 1 possible value
-        if len(value) == 1:
-            best_moves.append(Move(key[0], key[1], value[0]))
-        #mediocre moves have 2 possible values
-        elif len(value) == 2:
-            mediocre_moves.append(Move(key[0], key[1], value[0]))
-            mediocre_moves.append(Move(key[0], key[1], value[1]))
-        #bad moves have more than 2 possible values
-        else:
-            for i in range(len(value)):
-                bad_moves.append(Move(key[0], key[1], value[i]))
-
-    return best_moves, mediocre_moves, bad_moves
+    return move_dict
 
 
 def fill_board(board: SudokuBoard, game_state: GameState, in_board={}, recurse_counter=0):
