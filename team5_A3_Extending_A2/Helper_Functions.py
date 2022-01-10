@@ -150,7 +150,7 @@ def find_legal_moves(game_state: GameState, give_first=False) -> list:
 
     # return a randomly selected move so that the agent does not run out of time on larger boards
     if give_first:
-        return random.choice(random.choice(legal_moves.values()))
+        return random.choice(random.choice(list(legal_moves.values())))
 
     move_dict = {}
     for key, value in legal_moves.items():
