@@ -210,15 +210,15 @@ class MinimaxTree():
         # find legal moves
         board_copy = SudokuBoard(self.game_state.board.m, self.game_state.board.n)
         board_copy.squares = self.game_state.board.squares.copy()
-        best_moves, mediocre_moves, bad_moves = find_legal_moves(self.game_state)
+        move_dict = find_legal_moves(self.game_state)
 
-        #choose which lists of moves to consider, based on how many there are in each list
-        if len(best_moves) > 1:
-            moves = best_moves
-        if len(best_moves) <= 1 and len(mediocre_moves) > 1:
-            moves = best_moves+mediocre_moves
-        else:
-            moves = best_moves+mediocre_moves+bad_moves
+        #choose which lists of moves to consider, by adding moves until we added all of them or have enough moves
+        moves = []
+        for key in sorted(move_dict.keys()):
+            moves += move_dict[key]
+            if len(moves) > 5:
+                #stop adding more moves when at least 5 moves have been found
+                break
 
         # Iterate over the legal moves we decided to consider and add a child in the new layer for each
         for move in moves:
