@@ -296,6 +296,8 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         n = self.n
         m = self.m
         
+        track_values = set()
+        
         for f in range(N*N):
             if len(self.solver_map[f]) > 1: #if there is still more than one possible value for this tile...
                 i,j = self.f2rc(f)
