@@ -18,7 +18,7 @@ class Cell:
         self.row_index = i #row index
         self.col_index = j #column index
         self.regions = []  #regions the cell belongs to (3 regions : row, column and block)
-        self.values = []   #legal (non-taboo) values the cell can take, only used in specific scenarios
+        self.values = set()   #legal (non-taboo) values the cell can take, only used in specific scenarios
 
 
 class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
@@ -48,20 +48,56 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
                 c = Cell(*ij)
                 row = f'r{c.i}'  #row: 'ri'
                 col = f'c{c.j}'  #column: 'cj'
-                block = f'b{c.i//self.region_width()},{c.j//self.region_height()}' #block: 'bx,y'. e.g. Upperleft block is b0,0
+                block = f'b{c.i//self.n},{c.j//self.m}' #block: 'bx,y'. e.g. Upperleft block is b0,0
                 c.regions = [row, col, block] 
                 self.empty_cells.append(c)
                 
                 #update region_dict
                 if row in self.region_dict:
-                    self.region_dict[row][0] += 1
-                    if self.region_dict[row][0] < 3:
+                    if self.region_dict[row][0] < 2:
+                        self.region_dict[row][0] += 1
                         self.region_dict[row][1].append(c)
                 else:
                     self.region_dict[row] = [1,[c]]
         #update count            
         self.empty_cell_count = count
+    
+    def find_legal_value(self, c: Cell, taboo_moves=None):
+        '''
+        finds a legal value for empty cell c. NOTE: does not take taboo-ness into account beyond checking the
+        given list of TabooMoves (unless no taboo_moves were given, then it is not taken into account)
         
+        :param c: the empty cell for which a legal value must be found
+        :param taboo_moves: list of already established taboo moves
+        :return: None. legal values are saved as attribute of c
+        '''
+        N = self.N
+        all_values = set(range(1,N+1))
+        illegal = set()
+        
+        #check values in row
+        row_idx = int(c.regions[0][1])
+        for j in range(N):
+            illegal.add(self.get(row_idx,j))
+        
+        #check values in column
+        col_idx = int(c.regions[1][1])
+        for i in range(N):
+            illegal.add(self.get(i,col_idx))
+            
+        #check values in block
+        
+        
+        if len(illegal) == N - 1 or not taboo_moves:
+            c.values = all_values - illegal
+            return None
+        
+        for tm in taboo_moves:
+            if c.i == tm.i and c.j == tm.j:
+                illegal.add(tm.value)
+        
+        c.values = all_values - illegal
+            
         
     def get_best_move(self):
         '''
@@ -81,6 +117,7 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
          the endmove, try to taboo it only if the only other option is opening up a three-region move.
          If then we can't taboo it, check one- and two-region moves that open up three-regions.
         '''
+        
         
         
 
