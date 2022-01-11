@@ -33,7 +33,7 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         self.empty_cell_count = -1       #to keep track of how many turns remain
         self.region_dict = dict()        #to keep track of which regions have empty cells left and how many
         self.empty_cells = []            #to keep track of possible moves
-        #anything else we need
+        self.solver_map = []             #used to find (non)taboo moves
         
     def find_empty_cells(self):
         '''
@@ -81,10 +81,22 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         self.empty_cell_count = count
             
         
-    def get_best_move(self):
+    def get_best_move(self, score_diff):
         '''
-        divide the cells into four categories depending on how many regions they fill: 3, 2, 1 or none.
+        select the best move based on how many points we will score and whether a new move will be opened up to
+        the opponent that may score more points. E.g. a two-region move is good unless it opens up a three-region
+        move to the opponent.
+        
+        :param score_diff: the current difference in scores between us and the opponent (positive means we are in the lead)
+        :return: a move with coordinates, no value yet
+        :return: boolean indicating whether a taboo move should be aimed for or not
         '''
+        #find out whether we are set to get the end-move
+        if self.empty_cell_count % 2 == 0:
+            endmove = False
+        else:
+            endmove = True
+        
         #divide the empty cells into categories depending on how effective the moves would be
         reg3 = [] #moves that fill up three regions
         reg2 = [] #moves that fill up two regions
@@ -115,9 +127,9 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
                 bad.append(c)
         
         #now choose the best move from the best category
-        #if there is at least one move that fills three regions, take it. Doesn't matter which
+        #if there is at least one move that fills three regions, take it. Doesn't matter which, so we select randomly
         if len(reg3) > 0:
-            return choice(reg3) #select one randomly
+            return choice(reg3), False
         
         #if there are no three-region moves, and at least one two-region move, check if it's worth taking...
         if len(reg2) > 0:
@@ -142,7 +154,8 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
             
             if len(no_pen2) > 0: 
                 #if there are moves that fill two regions and don't create three-region moves for the opponent
-                return choice(no_pen2) #select one randomly
+                return choice(no_pen2), (not endmove and score_diff <= 4)
+                #if we are not set to have the endmove and our lead is less than 7 - the points we score this turn, the opponent could still beat us at the end
         
         #if there are no two- or three-region moves, and at least one one-region move, check if it's worth taking...
         if len(reg1) > 0:
@@ -169,11 +182,11 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
                     no_pen1.append(c1)
             
             if len(no_pen1) > 0:
-                return choice(no_pen1)
+                return choice(no_pen1), (not endmove and score_diff <= 6)
         
         #if there are no moves at all that score points and are worth taking, take a neutral move
         if len(reg0) > 0:
-            return choice(reg0)
+            return choice(reg0), not endmove
         
         #if there isn't even a neutral move, we cut our losses as best we can
         #we divide the remaining moves into categories as above, based on their penalties
@@ -200,17 +213,17 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         
         #we try to find a move with the lowest penalty, taking into account the points we would earn ourselves as well
         if len(pen01) > 0:
-            return choice(pen01)
+            return choice(pen01), not endmove
         if len(pen12) > 0:
-            return choice(pen12)
+            return choice(pen12), not endmove
         if len(pen02) > 0:
-            return choice(pen02)
+            return choice(pen02), not endmove
         if len(pen2) > 0:
-            return choice(pen2)
+            return choice(pen2), not endmove
         if len(pen13) > 0:
-            return choice(pen13)
+            return choice(pen13), True
         if len(pen03) > 0:
-            return choice(pen03)
+            return choice(pen03), True #a taboo move is always better than this
         
     def find_legal_values(self, c: Cell):
         '''
@@ -223,7 +236,6 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         N = self.N
         all_values = set(range(1,N+1))
         illegal = set()
-
         
         #check values in row
         row_idx = int(c.regions[0][1])
@@ -243,15 +255,117 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
                 illegal.add(self.get(i,j))
         
         if len(all_values - illegal) == 1:
-            return list(all_values - illegal)
+            return all_values - illegal
         
         for v in list(all_values - illegal):
             if TabooMove(c.i, c.j, v) in self.taboo_moves:
                 illegal.add(v)
         
-        return list(all_values - illegal)
+        return all_values - illegal
     
-    def find_nontaboo_values(self, c: Cell):
+    def create_solver_map(self):
+        '''
+        Creates a sudoku map where each tile contains a set of all possible values it can take.
+        '''
+        #create the map from a copy of the original map
+        self.solver_map = self.squares.copy()
+        #convert everything to sets
+        self.solver_map = list(map(lambda x: {x}, self.solver_map))
+        
+        #replace all the empty cells with sets of legal values
+        for c in self.empty_cells:
+            self.solver_map[self.rc2f(c.i,c.j)] = self.find_legal_values(c)
+  
+    
+    def update_solver_map(self, track=None, taboo=False):
+        '''
+        iterates over the solver map and eliminates values from tiles based on heuristics
+        
+        :param track: indicates (with a single integer index) a specific tile to keep track of, the values of which
+        will be returned, along with the index. If None, an empty set will be returned instead.
+        
+        :param taboo: boolean indicating whether the function should return a taboo move. If set to True, the first
+        taboo move found will be returned (single integer index and the taboo value(s)). 
+        Please note that if track is
+        not set to None, taboo should be set to False. Likewise, if taboo is set to True, track should be set to
+        None.
+        
+        :return: the index and value(s) of either the tracked tile or a taboo move.
+        '''   
+        N = self.N
+        n = self.n
+        m = self.m
+        
+        for f in range(N*N):
+            if len(self.solver_map[f]) > 1: #if there is still more than one possible value for this tile...
+                i,j = self.f2rc(f)
+                
+                #check if for one the possible values, this tile is the only tile in the region for which this value is possible
+                #and make sure if there are other tiles with only one possible value, this value is removed from the current tile's set
+                #row
+                row_union = set()
+                for rj in range(N):
+                    if rj != j:
+                        comp_tile = self.solver_map[self.rc2f(i,rj)]
+                        row_union = row_union.union(comp_tile)
+                        if len(comp_tile) == 1:
+                            if taboo and self.solver_map[f].intersection(comp_tile) != set():
+                                return f, self.solver_map[f].intersection(comp_tile)                            
+                            self.solver_map[f] = self.solver_map[f] - comp_tile
+                            
+                if len(self.solver_map[f] - row_union) == 1:
+                    if taboo and self.solver_map[f].intersection(row_union) != set():
+                        return f, self.solver_map[f].intersection(row_union)
+                    self.solver_map[f] = self.solver_map[f] - row_union
+
+                
+                #column
+                col_union = set()
+                for ci in range(N):
+                    if ci != i:
+                        comp_tile = self.solver_map[self.rc2f(ci,j)]
+                        col_union = col_union.union(comp_tile)
+                        if len(comp_tile) == 1:
+                            if taboo and self.solver_map[f].intersection(comp_tile) != set():
+                                return f, self.solver_map[f].intersection(comp_tile)
+                            self.solver_map[f] = self.solver_map[f] - comp_tile
+                            
+                if len(self.solver_map[f] - col_union) == 1:
+                    if taboo and self.solver_map[f].intersection(col_union) != set():
+                        return f, self.solver_map[f].intersection(col_union)
+                    self.solver_map[f] = self.solver_map[f] - col_union
+                
+                #block
+                bl_union = set()
+                topleft_row = i // n * n
+                topleft_col = j // m * m
+                for ci in range(topleft_row, topleft_row + n):
+                    for rj in range(topleft_col, topleft_col + m):
+                        if ci != i and rj != j:
+                            comp_tile = self.solver_map[self.rc2f(ci,rj)]
+                            bl_union = bl_union.union(comp_tile)
+                            if len(comp_tile) == 1:
+                                if taboo and self.solver_map[f].intersection(comp_tile) != set():
+                                    return f, self.solver_map[f].intersection(comp_tile)
+                                self.solver_map[f] = self.solver_map[f] - comp_tile
+                                
+                    if len(self.solver_map[f] - bl_union) == 1:
+                        if taboo and self.solver_map[f].intersection(bl_union) != set():
+                            return f, self.solver_map[f].intersection(bl_union)
+                        self.solver_map[f] = self.solver_map[f] - bl_union
+                        
+                if f == track:
+                    track_values = self.solver_map[f]
+                    
+            elif f == track: #if the track tile already has only one value left
+                track_values = self.solver_map[f]
+                break #we don't need to continue looking
+        
+        return track, track_values
+                
+        
+    
+    def find_nontaboo_values(self):
         '''
         finds values for the given cell c that are most likely not taboo. If cell c already has a values attribute,
         then only values in that list will be taken into account.
@@ -260,8 +374,9 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         :return: a list of values for cell c
         '''
         
+        
     
-    def find_taboo_values(self, c: Cell):
+    def find_taboo_move(self, c: Cell):
         '''
         finds values for the given cell c that ARE likely taboo. If cell c already has a values attribute,
         then only values in that list will be taken into account.
@@ -282,14 +397,55 @@ class SudokuAI(competitive_sudoku.sudokuai.SudokuAI):
         super().__init__()
 
     def compute_best_move(self, game_state: GameState) -> None:
+        #create an instance of an AnaBoard to analyze what move to play next
         board_copy = AnaBoard(m = game_state.board.m, n = game_state.board.n, taboo_moves = game_state.taboo_moves)
         board_copy.squares = game_state.board.squares #no need to use .copy() as we're not going to change anything
         
+        #Analyze the board and find empty cells, regions, etc.
         board_copy.find_empty_cells()
-        best_cell = board_copy.get_best_move()
-        legal_values = board_copy.find_legal_values(best_cell)
+        
+        #Find out which player we are...
+        if len(game_state.moves) % 2 == 0:
+            pn = 1
+        else:
+            pn = 2
+            
+        #...so we can calculate the score difference
+        if pn == 1:
+            score_difference = game_state.scores[0] - game_state.scores[1]
+        else:
+            score_difference = game_state.scores[1] - game_state.scores[0]
+        
+        #find out the best move to play, and whether the best move to play is actually a taboo move
+        best_cell, taboo = board_copy.get_best_move(score_difference)
+        legal_values = list(board_copy.find_legal_values(best_cell))
         best_cell.values = legal_values
         
         best_move = Move(best_cell.i, best_cell.j, choice(legal_values))
         
+        #propose a move with the knowledge we have, in case we don't have enough time to do taboo heuristics
         self.propose_move(best_move)
+        
+        #now we do taboo heuristics
+        board_copy.create_solver_map()
+        while True:
+            if not taboo:
+                #solve the sudoku a little more to increase chances at a non-taboo move
+                _,legal_values = board_copy.update_solver_map(track=board_copy.rc2f(best_cell.i, best_cell.j))
+                #propose the best move so far
+                if legal_values != set():
+                    best_move = Move(best_cell.i, best_cell.j, choice(list(legal_values)))
+                    self.propose_move(best_move)
+            else:
+                #solve the sudoku a little more in order to find taboo moves
+                f,taboo_values = board_copy.update_solver_map(taboo=True)
+                #if a taboo move was found, propose it
+                if taboo_values != set():
+                    i,j = board_copy.f2rc(f)
+                    taboo_move = Move(i,j, choice(list(taboo_values)))
+                    self.propose_move(taboo_move)
+                
+                
+            
+        
+        
