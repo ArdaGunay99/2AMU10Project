@@ -364,28 +364,6 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
                 break #we don't need to continue looking
         
         return track, track_values
-                
-        
-    
-    def find_nontaboo_values(self):
-        '''
-        finds values for the given cell c that are most likely not taboo. If cell c already has a values attribute,
-        then only values in that list will be taken into account.
-        
-        :param c: the cell for which values need to be returned
-        :return: a list of values for cell c
-        '''
-        
-        
-    
-    def find_taboo_move(self, c: Cell):
-        '''
-        finds values for the given cell c that ARE likely taboo. If cell c already has a values attribute,
-        then only values in that list will be taken into account.
-        
-        :param c: the cell for which values need to be returned
-        :return: a list of values for cell c
-        '''
         
         
         
