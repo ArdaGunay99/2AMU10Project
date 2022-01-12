@@ -7,7 +7,9 @@ result_dict = {"Player 1": [], "Player 2": [], "Board": [], "Time": [], "Winner"
 
 rep = 5 #number of repetitions for each player 1/player 2 combination
 
-players = [("team5_A3_Extending_A2","expert_player"), ("expert_player","team5_A3_Extending_A2"), ("team5_A2","team5_A3_Extending_A2"), ("team5_A3_Extending_A2","team5_A2")]
+#players = [("team5_A2","team5_MCTS"), ("team5_MCTS","team5_A2")] #Arda
+#players = [("expert_player","team5_MCTS"), ("team5_MCTS","expert_player")] #Rozanne
+#players = [("team5_A3_Extending_A2","team5_MCTS"), ("team5_MCTS","team5_A3_Extending_A2")] #Mennolt
 boards = ["empty-3x3","random-3x3","hard-3x3"]#,"empty-4x4","random-4x4"]
 time = rep*['0.1'] + rep*['0.5'] + rep*['1.0'] + rep*['2.0'] + rep*['5.0']
 
@@ -37,7 +39,12 @@ for p in players:
             i += 1
 
 results = pd.DataFrame(data = result_dict)
-results.to_csv("final-results.csv",index=False)
+
+#name = "final-results_A2_vs_MCTS.csv" #Arda
+#name = "final-results_Expert_vs_MCTS.csv" #Rozanne
+name = "final-results_A2_Extended_vs_MCTS.csv"
+
+results.to_csv(name,index=False)
 
 #%% Create the plots
 
