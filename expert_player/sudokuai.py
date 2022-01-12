@@ -214,13 +214,13 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         #we try to find a move with the lowest penalty, taking into account the points we would earn ourselves as well
         if len(pen01) > 0:
             return choice(pen01), not endmove
-        if len(pen12) > 0:
+        if len(reg1) > 0 and len(pen12) > 0:
             return choice(pen12), not endmove
         if len(pen02) > 0:
             return choice(pen02), not endmove
-        if len(pen2) > 0:
+        if len(reg2) > 0 and len(pen2) > 0:
             return choice(pen2), not endmove
-        if len(pen13) > 0:
+        if len(reg1) > 0 and len(pen13) > 0:
             return choice(pen13), True
         if len(pen03) > 0:
             return choice(pen03), True #a taboo move is always better than this
