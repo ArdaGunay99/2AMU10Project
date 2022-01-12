@@ -7,9 +7,9 @@ result_dict = {"Player 1": [], "Player 2": [], "Board": [], "Time": [], "Winner"
 
 rep = 5 #number of repetitions for each player 1/player 2 combination
 
-players = [("team5_A3_Extending_A2","greedy_player"), ("greedy_player","team5_A3_Extending_A2"), ("team5_A2","team5_A3_Extending_A2"), ("team5_A3_Extending_A2","team5_A2")]
-boards = ["empty-3x3","random-3x3","hard-3x3","empty-4x4","random-4x4"]
-time = rep*['0.1'] + rep*['0.5'] + rep*['1.0'] + rep*['5.0']
+players = [("team5_A3_Extending_A2","expert_player"), ("expert_player","team5_A3_Extending_A2"), ("team5_A2","team5_A3_Extending_A2"), ("team5_A3_Extending_A2","team5_A2")]
+boards = ["empty-3x3","random-3x3","hard-3x3"]#,"empty-4x4","random-4x4"]
+time = rep*['0.1'] + rep*['0.5'] + rep*['1.0'] + rep*['2.0'] + rep*['5.0']
 
 i = 1 #keep track of iterations and make checkpoints in case smth goes wrong, so nothing is lost
 for p in players:
@@ -32,7 +32,7 @@ for p in players:
 
                 if i%10==0:
                     results = pd.DataFrame(data = result_dict)
-                    results.to_csv(f'checkpoint{i}.csv',index=False)
+                    results.to_csv(f'checkpoint{i}_22_01_12.csv',index=False)
                 
             i += 1
 
