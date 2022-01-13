@@ -57,7 +57,7 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
                 
                 #update region_dict
                 if row in self.region_dict:
-                    if self.region_dict[row][0] < 3:
+                    if self.region_dict[row][0] < 3:  #we only care about regions with 1 or 2 empty cells
                         self.region_dict[row][0] += 1
                         self.region_dict[row][1].append(c)
                 else:
@@ -104,6 +104,7 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         reg0 = [] #moves that fill up no regions AND create no region-filling moves for the opponent
         bad = []  #moves that fill up no regions AND create region-filling move(s) for the opponent (hence, bad)
         
+        #count how many regions each move fills and whether they create new moves that fill regions (penalties)
         for c in self.empty_cells:
             region_fills = 0
             creates_moves = False
@@ -115,6 +116,7 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
                     creates_moves = True
                     c.penalty_regions.append(r)
             
+            #assign each cell to a category based on the regions filled
             if region_fills == 3:
                 reg3.append(c)
             elif region_fills == 2:
@@ -194,6 +196,7 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         pen02 = []
         pen03 = []
         
+        #check for each move left how many regions the new move it creates would fill
         for c1 in bad:
             for pr in c1.penalty_regions:
                 for c2 in self.region_dict[pr][1]:
@@ -254,6 +257,7 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
             for j in range(topleft_col, topleft_col + self.m):
                 illegal.add(self.get(i,j))
         
+        #if all but one value is illegal at this point there's no need to continue
         if len(all_values - illegal) == 1:
             return all_values - illegal
         
@@ -296,7 +300,7 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         n = self.n
         m = self.m
         
-        track_values = set()
+        track_values = set() #to be returned if we're tracking a cell
         
         for f in range(N*N):
             if len(self.solver_map[f]) > 1: #if there is still more than one possible value for this tile...
@@ -365,27 +369,6 @@ class AnaBoard(competitive_sudoku.sudoku.SudokuBoard):
         
         return track, track_values
                 
-        
-    
-    def find_nontaboo_values(self):
-        '''
-        finds values for the given cell c that are most likely not taboo. If cell c already has a values attribute,
-        then only values in that list will be taken into account.
-        
-        :param c: the cell for which values need to be returned
-        :return: a list of values for cell c
-        '''
-        
-        
-    
-    def find_taboo_move(self, c: Cell):
-        '''
-        finds values for the given cell c that ARE likely taboo. If cell c already has a values attribute,
-        then only values in that list will be taken into account.
-        
-        :param c: the cell for which values need to be returned
-        :return: a list of values for cell c
-        '''
         
         
         
