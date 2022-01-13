@@ -7,10 +7,11 @@ result_dict = {"Player 1": [], "Player 2": [], "Board": [], "Time": [], "Winner"
 
 rep = 5 #number of repetitions for each player 1/player 2 combination
 
+
 #players = [("team5_A2","team5_MCTS"), ("team5_MCTS","team5_A2")] #Arda
-#players = [("expert_player","team5_MCTS"), ("team5_MCTS","expert_player")] #Rozanne
+players = [("expert_player","team5_MCTS")("team5_MCTS","expert_player")] #Rozanne
 #players = [("team5_A3_Extending_A2","team5_MCTS"), ("team5_MCTS","team5_A3_Extending_A2")] #Mennolt
-boards = ["empty-3x3","random-3x3","hard-3x3"]#,"empty-4x4","random-4x4"]
+boards = ["empty-3x3","hard-3x3","random-3x3"]#,"empty-4x4","random-4x4"]
 time = rep*['0.1'] + rep*['0.5'] + rep*['1.0'] + rep*['2.0'] + rep*['5.0']
 
 i = 1 #keep track of iterations and make checkpoints in case smth goes wrong, so nothing is lost
@@ -41,8 +42,8 @@ for p in players:
 results = pd.DataFrame(data = result_dict)
 
 #name = "final-results_A2_vs_MCTS.csv" #Arda
-#name = "final-results_Expert_vs_MCTS.csv" #Rozanne
-name = "final-results_A2_Extended_vs_MCTS.csv"
+name = "final-results_Expert_vs_MCTS.csv" #Rozanne
+#name = "final-results_A2_Extended_vs_MCTS.csv"
 
 results.to_csv(name,index=False)
 
